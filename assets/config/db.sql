@@ -174,3 +174,79 @@ INSERT IGNORE INTO chat_messages (user_id, message) VALUES
 -- ====================================================
 -- FIM do script
 -- ====================================================
+
+-- att banco de dados
+
+DROP DATABASE IF EXISTS vaidetrem2;
+CREATE DATABASE vaidetrem2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE vaidetrem2;
+
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(150) NOT NULL,
+  email VARCHAR(200) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  role ENUM('admin','user') NOT NULL DEFAULT 'user',
+  phone VARCHAR(30),
+  department VARCHAR(120),
+  job_title VARCHAR(120),
+  avatar VARCHAR(255) DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE stations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(150) NOT NULL,
+  city VARCHAR(120),
+  state CHAR(2),
+  cep VARCHAR(9),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE routes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  status ENUM('ativa','manutencao') DEFAULT 'ativa',
+  duration_minutes INT DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE route_stations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  route_id INT NOT NULL,
+  station_id INT NOT NULL,
+  stop_order INT NOT NULL,
+  FOREIGN KEY (route_id) REFERENCES routes(id) ON DELETE CASCADE,
+  FOREIGN KEY (station_id) REFERENCES stations(id) ON DELETE RESTRICT
+);
+
+CREATE TABLE cameras (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(150) NOT NULL,
+  location VARCHAR(200),
+  status ENUM('online','offline') DEFAULT 'online',
+  train_code VARCHAR(50)
+);
+
+CREATE TABLE notices (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(200) NOT NULL,
+  body TEXT NOT NULL,
+  tag ENUM('Manutenção','Novidades','Sistema') DEFAULT 'Sistema',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE chat_messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- cria admin e cliente
+INSERT INTO users (name,email,password,role) VALUES
+('Administrador','admin@vaidetrem.com','$2y$10$4uEvjaGCF3Zr7ZSeZb05EOB7JHnIB8uHQzOHcKyImNOf0UbH19V0S','admin'),
+('Cliente de Teste','cliente@vaidetrem.com','$2y$10$Q3nVsb09TLOE2RSkWnRQhO8Fj8AZqQTBSPi2nZJb3M2N6yS6Kzk3i','user');
+-- senha admin: admin123
+-- senha cliente: cliente123

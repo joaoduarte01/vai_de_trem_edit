@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Abas -->
     <div class="tab-switch">
       <button type="button" class="tab-btn active" id="tab-cliente" onclick="showTab('cliente')">Cliente</button>
-      <button type="button" class="tab-btn" id="tab-usuario" onclick="showTab('usuario')">Usuário / Admin</button>
+<a href="login_admin.php" target="_blank" class="tab-btn" id="tab-usuario" style="text-align:center;display:flex;justify-content:center;align-items:center;">Usuário / Admin</a>
     </div>
 
     <!-- Login Cliente -->
