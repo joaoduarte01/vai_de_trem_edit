@@ -15,11 +15,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $res = $stmt->get_result();
 
     if ($row = $res->fetch_assoc()) {
+      // valida a senha
       if (password_verify($pass, $row['password'])) {
-        // Confere se o tipo de login bate com o tipo de conta
-        if (($login_type === 'cliente' && $row['role'] !== 'user') ||
-            ($login_type === 'usuario' && $row['role'] === 'user')) {
-          $error = 'Tipo de login incorreto para esta conta.';
+
+        // valida tipo de login (cliente x admin)
+        if (($login_type === 'cliente' && $row['role'] !== 'user')) {
+          $error = 'Essa conta é de administrador. Use a tela de login de usuário.';
+        } elseif (($login_type === 'usuario' && $row['role'] !== 'admin')) {
+          $error = 'Essa conta é de cliente. Use o login de cliente.';
         } else {
           $_SESSION['user'] = [
             'id' => $row['id'],
@@ -29,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'avatar' => $row['avatar']
           ];
 
-          // Redirecionamento
+          // Redirecionamento dinâmico
           if ($row['role'] === 'admin') {
             header('Location: dashboard.php');
           } else {
@@ -37,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           }
           exit;
         }
+
       } else {
         $error = 'Senha incorreta.';
       }
@@ -82,6 +86,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   background: var(--brand-light);
   color: #fff;
 }
+.auth-note {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 6px;
+}
 </style>
 </head>
 <body>
@@ -99,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Abas -->
     <div class="tab-switch">
       <button type="button" class="tab-btn active" id="tab-cliente" onclick="showTab('cliente')">Cliente</button>
-<a href="login_admin.php" target="_blank" class="tab-btn" id="tab-usuario" style="text-align:center;display:flex;justify-content:center;align-items:center;">Usuário / Admin</a>
+      <a href="login_admin.php" target="_blank" class="tab-btn" id="tab-usuario" style="text-align:center;display:flex;justify-content:center;align-items:center;">Usuário / Admin</a>
     </div>
 
     <!-- Login Cliente -->
@@ -107,30 +116,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <input type="hidden" name="login_type" value="cliente">
       <div>
         <label>Email</label>
-        <input class="input" type="email" name="email" placeholder="cliente@email.com" required>
+        <input class="input" type="email" name="email" placeholder="cliente@vaidetrem.com" required>
       </div>
       <div>
         <label>Senha</label>
         <input class="input" type="password" name="password" placeholder="Sua senha" required>
       </div>
       <button class="btn" type="submit">Entrar como Cliente</button>
-      <div class="link-muted" style="margin-top:10px">
-        Não tem conta? <a href="registrar_se.php">Registrar-se</a>
-      </div>
-    </form>
-
-    <!-- Login Usuário/Admin -->
-    <form id="form-usuario" method="post" class="row" style="gap:12px;display:none;">
-      <input type="hidden" name="login_type" value="usuario">
-      <div>
-        <label>Email</label>
-        <input class="input" type="email" name="email" placeholder="admin@vaidetrem.com" required>
-      </div>
-      <div>
-        <label>Senha</label>
-        <input class="input" type="password" name="password" placeholder="Sua senha" required>
-      </div>
-      <button class="btn secondary" type="submit">Entrar como Usuário</button>
+      <p class="auth-note">Não tem conta? <a href="registrar_se.php">Registrar-se</a></p>
     </form>
   </div>
 </div>
@@ -138,20 +131,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script>
 function showTab(type) {
   const clienteForm = document.getElementById('form-cliente');
-  const usuarioForm = document.getElementById('form-usuario');
   const tabCliente = document.getElementById('tab-cliente');
   const tabUsuario = document.getElementById('tab-usuario');
-
   if (type === 'cliente') {
     clienteForm.style.display = 'block';
-    usuarioForm.style.display = 'none';
     tabCliente.classList.add('active');
     tabUsuario.classList.remove('active');
-  } else {
-    clienteForm.style.display = 'none';
-    usuarioForm.style.display = 'block';
-    tabCliente.classList.remove('active');
-    tabUsuario.classList.add('active');
   }
 }
 </script>
