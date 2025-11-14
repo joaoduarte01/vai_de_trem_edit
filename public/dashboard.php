@@ -10,179 +10,261 @@ require_once('../assets/config/db.php');
 <title>Dashboard - Vai de Trem</title>
 <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
 <link href="../assets/css/styles.css" rel="stylesheet">
+
 <style>
   body {
-    background: #f7f9fc;
-    font-family: 'Poppins', sans-serif;
-    color: #222;
+    background: #f5f9ff;
+    padding-bottom: 90px; /* espaço para nav mobile */
   }
-  header {
+
+  /* HEADER MOBILE */
+  .top-header {
     background: var(--brand);
     color: #fff;
-    padding: 18px 28px;
+    padding: 18px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    border-radius: 0 0 20px 20px;
   }
-  header h1 {
-    font-size: 22px;
-    font-weight: 700;
+  .top-header h1 {
+    font-size: 20px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
   }
-  header .user {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .container {
-    max-width: 1200px;
-    margin: 32px auto;
-    padding: 0 20px;
-  }
-  .stats-grid {
+
+  /* SEÇÃO ESTATÍSTICAS MOBILE */
+  .stats-mobile {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 16px;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 20px;
   }
   .stat-card {
+    padding: 18px;
     background: #fff;
     border-radius: 14px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    transition: all 0.2s ease;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   }
-  .stat-card:hover { transform: translateY(-3px); }
   .stat-card i {
-    font-size: 34px;
+    font-size: 26px;
     color: var(--brand);
   }
   .stat-value {
-    font-size: 26px;
+    font-size: 22px;
     font-weight: 700;
+    margin-top: 4px;
   }
-  .quick-actions, .recent {
-    margin-top: 40px;
+  .stat-label {
+    font-size: 13px;
+    color: var(--muted);
   }
-  .quick-actions h2, .recent h2 {
-    font-size: 20px;
-    margin-bottom: 16px;
-    font-weight: 600;
+
+  /* ACESSO RÁPIDO */
+  .quick-section {
+    margin: 20px;
   }
-  .action-grid {
+  .quick-section h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  .quick-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
   }
-  .action-card {
+  .quick-card {
+    padding: 16px;
     background: #fff;
     border-radius: 14px;
-    padding: 18px;
     text-align: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: 0.2s;
   }
-  .action-card:hover {
-    background: var(--brand);
-    color: #fff;
+  .quick-card:hover {
     transform: translateY(-3px);
   }
-  .action-card .badge {
-    margin-bottom: 6px;
+  .quick-card i {
+    font-size: 28px;
+    color: var(--brand);
   }
-  .recent .item {
+  .quick-card-title {
+    font-size: 13px;
+    margin-top: 6px;
+    color: var(--text);
+  }
+
+  /* ATIVIDADES RECENTES */
+  .recent-section {
+    margin: 20px;
+  }
+  .recent-section h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  .recent-item {
     background: #fff;
+    padding: 14px;
     border-radius: 12px;
-    padding: 14px 16px;
     margin-bottom: 10px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    gap: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   }
-  .recent .item i {
+  .recent-item i {
+    font-size: 22px;
     color: var(--brand);
   }
-  footer {
+
+  /* NAV MOBILE FIXO BAIXO */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    height: 70px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+    z-index: 500;
+  }
+  .bottom-nav a {
     text-align: center;
-    padding: 20px;
-    color: #666;
-    font-size: 13px;
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .bottom-nav i {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .bottom-nav a.active {
+    color: var(--brand);
+    font-weight: 600;
   }
 </style>
+
 </head>
 <body>
 
-<header>
-  <h1><i class="ri-train-line"></i> Vai de Trem — Painel Administrativo</h1>
-  <div class="user">
-    <i class="ri-user-3-line"></i> 
+<!-- HEADER -->
+<div class="top-header">
+  <h1><i class="ri-dashboard-line"></i> Dashboard</h1>
+
+  <div style="display:flex;align-items:center;gap:10px;">
     <span><?php echo htmlspecialchars($user['name']); ?></span>
-    <a href="logout.php" class="btn secondary" style="margin-left:10px">Sair</a>
+    <a href="logout.php"><i class="ri-logout-circle-line" style="font-size:22px;color:#fff;"></i></a>
   </div>
-</header>
-
-<div class="container">
-
-  <div class="stats-grid">
-    <?php
-      $routesAtivas = $mysqli->query("SELECT COUNT(*) AS total FROM routes WHERE status='ativa'")->fetch_assoc()['total'];
-      $notices = $mysqli->query("SELECT COUNT(*) AS total FROM notices")->fetch_assoc()['total'];
-      $stations = $mysqli->query("SELECT COUNT(*) AS total FROM stations")->fetch_assoc()['total'];
-      $cameras = $mysqli->query("SELECT COUNT(*) AS total FROM cameras")->fetch_assoc()['total'];
-
-      $stats = [
-        ['label'=>'Rotas Ativas','icon'=>'ri-route-line','value'=>$routesAtivas],
-        ['label'=>'Estações','icon'=>'ri-map-pin-line','value'=>$stations],
-        ['label'=>'Avisos','icon'=>'ri-notification-3-line','value'=>$notices],
-        ['label'=>'Câmeras','icon'=>'ri-video-line','value'=>$cameras],
-      ];
-      foreach($stats as $s){
-        echo '<div class="stat-card"><i class="'.$s['icon'].'"></i><div><div class="stat-value">'.$s['value'].'</div><div>'.$s['label'].'</div></div></div>';
-      }
-    ?>
-  </div>
-
-  <div class="quick-actions">
-    <h2>Acesso Rápido</h2>
-    <div class="action-grid">
-      <a href="cameras.php" class="action-card">
-        <div class="badge blue"><i class="ri-camera-line"></i> Câmeras</div>
-        <div class="link-muted">Monitorar Câmeras</div>
-      </a>
-      <a href="avisos.php" class="action-card">
-        <div class="badge blue"><i class="ri-notification-3-line"></i> Avisos</div>
-        <div class="link-muted">Central de Avisos</div>
-      </a>
-      <a href="rotas.php" class="action-card">
-        <div class="badge blue"><i class="ri-route-line"></i> Rotas</div>
-        <div class="link-muted">Gerenciar Rotas</div>
-      </a>
-      <a href="relatorios.php" class="action-card">
-        <div class="badge blue"><i class="ri-bar-chart-box-line"></i> Relatórios</div>
-        <div class="link-muted">Análises do Sistema</div>
-      </a>
-    </div>
-  </div>
-
-  <div class="recent">
-    <h2>Atividades Recentes</h2>
-    <div class="item"><i class="ri-train-line"></i> 08:30 — Trem #1234 iniciou rota São Paulo → Rio de Janeiro</div>
-    <div class="item"><i class="ri-tools-line"></i> 08:25 — Manutenção programada para Trem #5678</div>
-    <div class="item"><i class="ri-map-pin-2-line"></i> 08:20 — Nova rota adicionada: Campinas → Santos</div>
-    <div class="item"><i class="ri-check-line"></i> 08:15 — Trem #9012 chegou ao destino</div>
-  </div>
-
 </div>
 
-<footer>
-  © <?php echo date('Y'); ?> Vai de Trem — Sistema de Monitoramento Ferroviário
-</footer>
+<?php
+  $routesAtivas = $mysqli->query("SELECT COUNT(*) AS total FROM routes WHERE status='ativa'")->fetch_assoc()['total'];
+  $notices = $mysqli->query("SELECT COUNT(*) AS total FROM notices")->fetch_assoc()['total'];
+  $stations = $mysqli->query("SELECT COUNT(*) AS total FROM stations")->fetch_assoc()['total'];
+  $cameras = $mysqli->query("SELECT COUNT(*) AS total FROM cameras")->fetch_assoc()['total'];
+?>
+
+<!-- ESTATÍSTICAS MOBILE -->
+<div class="stats-mobile">
+  <div class="stat-card">
+    <i class="ri-route-line"></i>
+    <div class="stat-value"><?php echo $routesAtivas; ?></div>
+    <div class="stat-label">Rotas Ativas</div>
+  </div>
+
+  <div class="stat-card">
+    <i class="ri-map-pin-line"></i>
+    <div class="stat-value"><?php echo $stations; ?></div>
+    <div class="stat-label">Estações</div>
+  </div>
+
+  <div class="stat-card">
+    <i class="ri-notification-3-line"></i>
+    <div class="stat-value"><?php echo $notices; ?></div>
+    <div class="stat-label">Avisos</div>
+  </div>
+
+  <div class="stat-card">
+    <i class="ri-video-line"></i>
+    <div class="stat-value"><?php echo $cameras; ?></div>
+    <div class="stat-label">Câmeras</div>
+  </div>
+</div>
+
+<!-- ACESSO RÁPIDO -->
+<div class="quick-section">
+  <h2>Acesso Rápido</h2>
+
+  <div class="quick-grid">
+    <a href="cameras.php" class="quick-card">
+      <i class="ri-camera-line"></i>
+      <div class="quick-card-title">Câmeras</div>
+    </a>
+
+    <a href="avisos.php" class="quick-card">
+      <i class="ri-notification-badge-line"></i>
+      <div class="quick-card-title">Avisos</div>
+    </a>
+
+    <a href="rotas.php" class="quick-card">
+      <i class="ri-route-line"></i>
+      <div class="quick-card-title">Rotas</div>
+    </a>
+
+    <a href="relatorios.php" class="quick-card">
+      <i class="ri-bar-chart-box-line"></i>
+      <div class="quick-card-title">Relatórios</div>
+    </a>
+  </div>
+</div>
+
+<!-- ATIVIDADES RECENTES -->
+<div class="recent-section">
+  <h2>Atividades Recentes</h2>
+
+  <div class="recent-item">
+    <i class="ri-train-line"></i>
+    08:30 — Trem #1234 iniciou rota SP → RJ
+  </div>
+
+  <div class="recent-item">
+    <i class="ri-tools-line"></i>
+    08:25 — Manutenção programada Trem #5678
+  </div>
+
+  <div class="recent-item">
+    <i class="ri-map-pin-line"></i>
+    08:20 — Nova rota adicionada: Campinas → Santos
+  </div>
+
+  <div class="recent-item">
+    <i class="ri-check-line"></i>
+    08:15 — Trem #9012 chegou ao destino
+  </div>
+</div>
+
+<!-- NAV MOBILE FIXO -->
+<div class="bottom-nav">
+  <a href="dashboard.php" class="active">
+    <i class="ri-dashboard-line"></i>Início
+  </a>
+  <a href="rotas.php">
+    <i class="ri-route-line"></i>Rotas
+  </a>
+  <a href="cameras.php">
+    <i class="ri-camera-line"></i>Câmeras
+  </a>
+  <a href="avisos.php">
+    <i class="ri-notification-3-line"></i>Avisos
+  </a>
+</div>
 
 </body>
 </html>

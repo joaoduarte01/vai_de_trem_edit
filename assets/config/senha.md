@@ -1,8 +1,5 @@
-cliente@vaidetrem.com / cliente123
+admin@vaidetrem.com → admin123
 
-| Campo              | Valor                |
-| ------------------ | -------------------- |
-| **Nome:**          | Administrador 2      |
-| **Email:**         | `adm2@vaidetrem.com` |
-| **Senha:**         | `novaSenha123`       |
-| **Função (role):** | `admin`              |
+cliente@vaidetrem.com → cliente123
+
+usuario admin novo via create_admin.php - joaoxerma@gmail.com/123

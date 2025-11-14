@@ -29,149 +29,221 @@ if (isset($_GET['delete'])) {
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Rotas - Vai de Trem</title>
-  <?php include '_partials/header.php'; ?>
-  <style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rotas - Vai de Trem</title>
+
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+<link href="../assets/css/styles.css" rel="stylesheet">
+
+<style>
     body {
-      background: #f5f6fa;
-      font-family: 'Poppins', sans-serif;
-      color: #222;
-      margin: 0;
-      padding: 0;
+        background: #f5f9ff;
+        padding-bottom: 90px;
+        font-family: 'Poppins', sans-serif;
     }
-    .container {
-      max-width: 900px;
-      margin: 40px auto;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      padding: 20px 30px;
+
+    /* HEADER */
+    .top-header {
+        background: var(--brand);
+        color: #fff;
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-radius: 0 0 18px 18px;
     }
-    h2 {
-      text-align: center;
-      color: #004aad;
-      margin-bottom: 20px;
+    .top-header h1 {
+        font-size: 20px;
+        font-weight: 700;
     }
-    .topbar details {
-      background: #eef3ff;
-      padding: 15px;
-      border-radius: 8px;
+
+    /* CARDS */
+    .route-list {
+        padding: 18px;
+        display: grid;
+        gap: 16px;
     }
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
+
+    .route-card {
+        background: #fff;
+        padding: 18px;
+        border-radius: 16px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
     }
-    .input, .select {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 15px;
+
+    .route-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #1e293b;
     }
-    .btn {
-      background: #004aad;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    .btn:hover {
-      background: #0061ff;
-    }
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 25px;
-    }
-    .table th, .table td {
-      border-bottom: 1px solid #ddd;
-      padding: 12px;
-      text-align: left;
-    }
-    .table th {
-      background: #004aad;
-      color: #fff;
-    }
+
     .badge {
-      display: inline-block;
-      padding: 5px 10px;
-      border-radius: 6px;
-      font-size: 13px;
-      text-transform: capitalize;
-      background: #ccc;
-      color: #222;
+        font-size: 12px;
+        padding: 5px 10px;
+        border-radius: 20px;
     }
-    .badge.blue {
-      background: #00c52b;
-      color: #fff;
+    .badge.blue { background:#00c52b; color:#fff; }
+    .badge.red { background:#ff6b6b; color:#fff; }
+
+    .details {
+        color: #64748b;
+        font-size: 14px;
+        margin-top: 6px;
     }
-    a.badge {
-      text-decoration: none;
-      background: #e74c3c;
-      color: #fff;
+
+    .delete-btn {
+        margin-top: 12px;
+        display: inline-block;
+        background: #ff4b4b;
+        padding: 8px 14px;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 13px;
     }
-    a.badge:hover {
-      background: #c0392b;
+
+    /* Floating Button */
+    .fab {
+        position: fixed;
+        right: 20px;
+        bottom: 88px;
+        width: 60px;
+        height: 60px;
+        background: var(--brand);
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 28px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+        cursor: pointer;
     }
-  </style>
+
+    /* Modal */
+    .modal-bg {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .modal {
+        background: #fff;
+        padding: 20px;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 420px;
+    }
+
+    .modal h2 {
+        margin-bottom: 12px;
+    }
+
+    .input, .select {
+        width: 100%;
+        margin: 6px 0;
+    }
+
+    /* Bottom Nav */
+    .bottom-nav {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: #fff;
+        height: 70px;
+        display: flex; justify-content: space-around; align-items: center;
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+    }
+    .bottom-nav a {
+        color: var(--muted);
+        text-align: center;
+        font-size: 12px;
+        text-decoration: none;
+    }
+    .bottom-nav i {
+        font-size: 24px;
+        display: block;
+        margin-bottom: 4px;
+    }
+    .active {
+        color: var(--brand) !important;
+    }
+</style>
+
 </head>
 <body>
 
-<div class="container">
-  <h2>Gerenciamento de Rotas</h2>
+<!-- HEADER -->
+<div class="top-header">
+    <h1><i class="ri-route-line"></i> Rotas</h1>
+</div>
 
-  <details>
-    <summary style="cursor:pointer;font-weight:600;">+ Nova Rota</summary>
-    <form method="post" class="row" style="margin-top:10px">
+<!-- LISTA DE ROTAS -->
+<div class="route-list">
+
+<?php
+$res = $mysqli->query("SELECT * FROM routes ORDER BY id DESC");
+
+while ($r = $res->fetch_assoc()) {
+    $badge = $r['status'] === 'ativa'
+        ? '<span class="badge blue">Ativa</span>'
+        : '<span class="badge red">Manutenção</span>';
+
+    echo "
+    <div class='route-card'>
+        <div class='route-title'>".htmlspecialchars($r['name'])."</div>
+        $badge
+        <div class='details'><i class='ri-time-line'></i> ".($r['duration_minutes'] ?: '-')." min</div>
+        <a class='delete-btn' href='?delete=".$r['id']."' onclick='return confirm(\"Excluir esta rota?\")'>
+            <i class='ri-delete-bin-line'></i> Excluir
+        </a>
+    </div>";
+}
+?>
+
+</div>
+
+<!-- FAB BUTTON -->
+<div class="fab" onclick="openModal()"><i class="ri-add-line"></i></div>
+
+<!-- MODAL NOVA ROTA -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h2>Nova Rota</h2>
+    <form method="post">
+      <input type="hidden" name="create" value="1">
       <input class="input" name="name" placeholder="Nome da rota" required>
       <select class="select" name="status">
         <option value="ativa">Ativa</option>
         <option value="manutencao">Manutenção</option>
       </select>
       <input class="input" type="number" name="duration" placeholder="Duração (min)">
-      <button class="btn" name="create" value="1">Salvar</button>
+      <button class="btn" style="margin-top:10px;width:100%;">Salvar</button>
     </form>
-  </details>
-
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Rota</th>
-        <th>Status</th>
-        <th>Duração</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php
-      $res = $mysqli->query("SELECT * FROM routes ORDER BY id DESC");
-      if ($res->num_rows > 0) {
-        while ($r = $res->fetch_assoc()) {
-          $badge = $r['status'] === 'ativa'
-            ? '<span class="badge blue">Ativa</span>'
-            : '<span class="badge">Manutenção</span>';
-
-          echo '<tr>
-                  <td>'.htmlspecialchars($r['name']).'</td>
-                  <td>'.$badge.'</td>
-                  <td>'.($r['duration_minutes'] ?: '-').' min</td>
-                  <td>
-                    <a class="badge" href="?delete='.$r['id'].'" onclick="return confirm(\'Excluir esta rota?\')">Excluir</a>
-                  </td>
-                </tr>';
-        }
-      } else {
-        echo '<tr><td colspan="4" style="text-align:center;color:#777;">Nenhuma rota cadastrada.</td></tr>';
-      }
-      ?>
-    </tbody>
-  </table>
+  </div>
 </div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <a href="dashboard.php"><i class="ri-dashboard-line"></i>Início</a>
+  <a href="rotas.php" class="active"><i class="ri-route-line"></i>Rotas</a>
+  <a href="cameras.php"><i class="ri-camera-line"></i>Câmeras</a>
+  <a href="avisos.php"><i class="ri-notification-3-line"></i>Avisos</a>
+  <a href="meu_perfil.php"><i class="ri-user-line"></i>Perfil</a>
+</div>
+
+<script>
+function openModal() {
+  document.getElementById("modal").style.display = "flex";
+}
+window.onclick = e => {
+  if (e.target.id === "modal") document.getElementById("modal").style.display = "none";
+}
+</script>
 
 </body>
 </html>
