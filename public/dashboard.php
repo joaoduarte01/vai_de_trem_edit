@@ -308,7 +308,7 @@ require_once('../assets/config/db.php');
     <span>Avisos</span>
   </a>
 
-  <a href="perfil.php">
+  <a href="meu_perfil.php">
     <i class="ri-user-3-line"></i>
     <span>Perfil</span>
   </a>

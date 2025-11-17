@@ -35,58 +35,71 @@ body {
 .route-list {
     padding: 18px;
     display: grid;
-    gap: 16px;
+    gap: 18px;
 }
 
 /* CARD */
 .route-card {
     background: #fff;
     padding: 18px;
-    border-radius: 16px;
+    border-radius: 18px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.06);
 }
 
-/* PROGRESS BAR */
-.progress-box {
-    margin-top: 14px;
-    background: #eef3ff;
-    border-radius: 12px;
-    height: 12px;
+/* PROGRESS BAR COMPLEXA */
+.progress-container {
+    margin-top: 16px;
+}
+
+.stations {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.bar-outer {
+    width: 100%;
+    height: 14px;
+    background: #e2e8f0;
+    border-radius: 20px;
     position: relative;
     overflow: hidden;
 }
-.progress {
+
+.bar-inner {
     height: 100%;
-    border-radius: 12px;
-    background: linear-gradient(90deg, #00c52b, #32e36e);
     width: 0%;
-    transition: width 1s ease-in-out;
-}
-.progress.delay {
-    background: linear-gradient(90deg, #facc15, #fcd34d);
-}
-
-/* TEXTOS */
-.route-title {
-    font-size: 17px;
-    font-weight: 600;
-}
-.badge.blue { background:#00c52b; color:#fff; }
-.badge.red { background:#ff6b6b; color:#fff; }
-
-.details {
-    font-size: 14px;
-    color: #64748b;
-    margin-top: 6px;
+    background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+    border-radius: 20px;
+    transition: width 1s linear;
 }
 
+.train-icon {
+    position: absolute;
+    top: -16px;
+    font-size: 26px;
+    transition: left 1s linear;
+}
+
+/* DETALHES DE INFORMAÇÃO */
 .live-info {
-    font-size: 13px;
+    margin-top: 10px;
+    font-size: 14px;
     color: #334155;
-    margin-top: 6px;
+    line-height: 1.4;
 }
 
-/* BOTTOM NAV */
+.live-info b {
+    color: #1e66ff;
+}
+
+/* BADGES */
+.badge.blue { background:#00c52b; color:#fff; padding:5px 10px; border-radius:10px;}
+.badge.red { background:#ff4b4b; color:#fff; padding:5px 10px; border-radius:10px; }
+
+/* NAV */
 .bottom-nav {
     position: fixed; bottom: 0; left: 0; right: 0;
     background: #fff;
@@ -105,9 +118,8 @@ body {
     font-size: 24px;
     display: block;
 }
-.bottom-nav a.active {
-    color: var(--brand);
-}
+.bottom-nav a.active { color: var(--brand); }
+
 </style>
 </head>
 
@@ -115,88 +127,80 @@ body {
 
 <!-- HEADER -->
 <div class="top-header">
-    <h1><i class="ri-route-line"></i> Rotas</h1>
+    <h1><i class="ri-route-line"></i> Rotas – Monitoramento ao Vivo</h1>
 </div>
 
 <div class="route-list">
 
-<!-- ROTA 1 -->
+<!-- ============================
+      ROTA 1 – ANIMAÇÃO COMPLETA
+============================= -->
 <div class="route-card">
     <div class="route-title">São Paulo → Rio de Janeiro</div>
     <span class="badge blue">Ativa</span>
 
     <div class="details">
-        <i class="ri-map-pin-line"></i> Paradas: Estação Central • Norte • Sul<br>
+        <i class="ri-map-pin-line"></i> Estações: Central • Norte • Fronteira • Rio Centro <br>
         <i class="ri-time-line"></i> Duração total: 6h 30min
     </div>
 
-    <div class="live-info">
-        <i class="ri-train-line"></i> Progresso: <b id="p1_text">0%</b> — Chegando em Estação Norte
+    <!-- Estações -->
+    <div class="progress-container">
+        <div class="stations">
+            <span>Central</span>
+            <span>Norte</span>
+            <span>Fronteira</span>
+            <span>Rio</span>
+        </div>
+
+        <div class="bar-outer">
+            <div class="bar-inner" id="r1"></div>
+            <i class="ri-train-fill train-icon" id="train1"></i>
+        </div>
     </div>
 
-    <div class="progress-box">
-        <div class="progress" id="p1"></div>
+    <div class="live-info">
+        Progresso: <b id="r1_txt">0%</b><br>
+        Velocidade: <b id="v1">0 km/h</b><br>
+        Chegada prevista: <b id="eta1">--:--</b>
     </div>
 </div>
 
-<!-- ROTA 2 - ATRASO -->
+
+<!-- ============================
+      ROTA 2 – COM ATRASO
+============================= -->
 <div class="route-card">
     <div class="route-title">Campinas → Santos</div>
-    <span class="badge blue">Ativa</span>
+    <span class="badge red">Atraso</span>
 
     <div class="details">
-        <i class="ri-map-pin-line"></i> Paradas: KM45 • Ponte Rio Grande<br>
-        <i class="ri-time-line"></i> Duração total: 3h 45min
+        <i class="ri-map-pin-line"></i> KM45 • Ponte Grande • Baixada<br>
+        <i class="ri-time-line"></i> Duração: 3h 45min
+    </div>
+
+    <div class="progress-container">
+        <div class="stations">
+            <span>KM45</span>
+            <span>Ponte</span>
+            <span>Baixada</span>
+        </div>
+
+        <div class="bar-outer">
+            <div class="bar-inner" id="r2" style="background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div>
+            <i class="ri-train-fill train-icon" id="train2"></i>
+        </div>
     </div>
 
     <div class="live-info" style="color:#b45309;">
-        <i class="ri-alert-line"></i> Atraso de 5 minutos — trecho lento
-    </div>
-
-    <div class="progress-box">
-        <div class="progress delay" id="p2"></div>
-    </div>
-</div>
-
-<!-- ROTA 3 - PARADA -->
-<div class="route-card">
-    <div class="route-title">Belo Horizonte → São Paulo</div>
-    <span class="badge red">Manutenção</span>
-
-    <div class="details">
-        <i class="ri-map-pin-line"></i> Paradas: Estação Sul • Central<br>
-        <i class="ri-time-line"></i> Duração: 8h 15min
-    </div>
-
-    <div class="live-info" style="color:#b91c1c;">
-        <i class="ri-error-warning-line"></i> Operação suspensa até 15/11
-    </div>
-
-    <div class="progress-box">
-        <div class="progress delay" style="width:0%"></div>
-    </div>
-</div>
-
-<!-- ROTA 4 -->
-<div class="route-card">
-    <div class="route-title">Curitiba → Florianópolis</div>
-    <span class="badge blue">Ativa</span>
-
-    <div class="details">
-        <i class="ri-map-pin-line"></i> Paradas: Estação Norte • Ponte Rio Grande<br>
-        <i class="ri-time-line"></i> Duração total: 5h 20min
-    </div>
-
-    <div class="live-info">
-        <i class="ri-check-line"></i> Trem pontual — tudo normal
-    </div>
-
-    <div class="progress-box">
-        <div class="progress" id="p4"></div>
+        Progresso: <b id="r2_txt">0%</b> (trecho lento)<br>
+        Velocidade: <b id="v2">0 km/h</b><br>
+        ETA ajustada: <b id="eta2">--:--</b>
     </div>
 </div>
 
 </div>
+
 
 <!-- NAV -->
 <div class="bottom-nav">
@@ -208,23 +212,43 @@ body {
 </div>
 
 <script>
-// progresso simulado
-function animateProgress(id, textId, target) {
-    let bar = document.getElementById(id);
+// Função de animação completa
+function simulateRoute(progressId, trainId, textId, speedId, etaId, maxProgress, durationMinutes, delay = 0) {
+    let bar = document.getElementById(progressId);
+    let train = document.getElementById(trainId);
     let txt = document.getElementById(textId);
-    let progress = 0;
+    let speedTxt = document.getElementById(speedId);
+    let etaTxt = document.getElementById(etaId);
+
+    let p = 0;
 
     let interval = setInterval(() => {
-        if (progress >= target) clearInterval(interval);
-        progress++;
-        bar.style.width = progress + "%";
-        if (txt) txt.innerText = progress + "%";
-    }, 50);
+        if (p >= maxProgress) clearInterval(interval);
+
+        p++;
+
+        bar.style.width = p + "%";
+        train.style.left = `calc(${p}% - 12px)`;
+        txt.innerText = p + "%";
+
+        // velocidade variando realisticamente
+        let speed = Math.floor(Math.random() * 30) + 70 - delay;
+        if (speed < 10) speed = 10;
+        speedTxt.innerText = speed + " km/h";
+
+        // ETA aproximada
+        let minutesLeft = Math.floor((durationMinutes * (100 - p)) / 100);
+        let now = new Date();
+        now.setMinutes(now.getMinutes() + minutesLeft);
+        etaTxt.innerText = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    }, 90);
 }
 
-animateProgress("p1", "p1_text", 72); // rota 1: 72% concluído
-animateProgress("p2", null, 40);    // rota atrasada
-animateProgress("p4", null, 83);    // rota avançada
+// ROTA 1
+simulateRoute("r1", "train1", "r1_txt", "v1", "eta1", 72, 390);
+
+// ROTA 2 (com atraso)
+simulateRoute("r2", "train2", "r2_txt", "v2", "eta2", 40, 225, 25);
 </script>
 
 </body>
