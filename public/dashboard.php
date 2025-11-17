@@ -251,20 +251,69 @@ require_once('../assets/config/db.php');
 </div>
 
 <!-- NAV MOBILE FIXO -->
+<style>
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #fff;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0 8px;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+    z-index: 9999;
+  }
+  .bottom-nav a {
+    text-decoration: none;
+    color: #64748b;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: .2s;
+  }
+  .bottom-nav a i {
+    font-size: 22px;
+  }
+  .bottom-nav a.active,
+  .bottom-nav a:hover {
+    color: var(--brand);
+  }
+
+  /* esconder nav no desktop */
+  @media (min-width: 768px) {
+    .bottom-nav { display: none !important; }
+  }
+</style>
+
 <div class="bottom-nav">
   <a href="dashboard.php" class="active">
-    <i class="ri-dashboard-line"></i>Início
+    <i class="ri-dashboard-line"></i>
+    <span>Início</span>
   </a>
+
   <a href="rotas.php">
-    <i class="ri-route-line"></i>Rotas
+    <i class="ri-route-line"></i>
+    <span>Rotas</span>
   </a>
+
   <a href="cameras.php">
-    <i class="ri-camera-line"></i>Câmeras
+    <i class="ri-camera-line"></i>
+    <span>Câmeras</span>
   </a>
+
   <a href="avisos.php">
-    <i class="ri-notification-3-line"></i>Avisos
+    <i class="ri-notification-3-line"></i>
+    <span>Avisos</span>
+  </a>
+
+  <a href="perfil.php">
+    <i class="ri-user-3-line"></i>
+    <span>Perfil</span>
   </a>
 </div>
+
 
 </body>
 </html>

@@ -1,10 +1,10 @@
--- ====================================================
--- vaidetrem2_full.sql
--- Banco completo mesclado com todas as alterações
--- Execute em phpMyAdmin (ou MySQL CLI)
--- ====================================================
 
--- (Opcional) apaga banco antigo se quiser garantir start clean
+
+
+
+
+
+
 DROP DATABASE IF EXISTS vaidetrem2;
 
 CREATE DATABASE IF NOT EXISTS vaidetrem2
@@ -12,9 +12,9 @@ CREATE DATABASE IF NOT EXISTS vaidetrem2
   COLLATE utf8mb4_unicode_ci;
 USE vaidetrem2;
 
--- ==============================
--- TABELA: users
--- ==============================
+
+
+
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
@@ -29,9 +29,9 @@ CREATE TABLE IF NOT EXISTS users (
   CONSTRAINT uq_users_email UNIQUE (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- TABELA: stations
--- ==============================
+
+
+
 CREATE TABLE IF NOT EXISTS stations (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
@@ -41,9 +41,9 @@ CREATE TABLE IF NOT EXISTS stations (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- TABELA: routes
--- ==============================
+
+
+
 CREATE TABLE IF NOT EXISTS routes (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(200) NOT NULL,
@@ -52,10 +52,10 @@ CREATE TABLE IF NOT EXISTS routes (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- TABELA: route_stations
--- (relação entre rotas e estações, ordem de parada)
--- ==============================
+
+
+
+
 CREATE TABLE IF NOT EXISTS route_stations (
   id INT AUTO_INCREMENT PRIMARY KEY,
   route_id INT NOT NULL,
@@ -69,9 +69,9 @@ CREATE TABLE IF NOT EXISTS route_stations (
   CONSTRAINT uq_route_stop UNIQUE (route_id, stop_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- TABELA: cameras
--- ==============================
+
+
+
 CREATE TABLE IF NOT EXISTS cameras (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
@@ -81,9 +81,9 @@ CREATE TABLE IF NOT EXISTS cameras (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- TABELA: notices
--- ==============================
+
+
+
 CREATE TABLE IF NOT EXISTS notices (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(200) NOT NULL,
@@ -92,9 +92,9 @@ CREATE TABLE IF NOT EXISTS notices (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- TABELA: chat_messages
--- ==============================
+
+
+
 CREATE TABLE IF NOT EXISTS chat_messages (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
@@ -104,17 +104,17 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- Dados iniciais (limpa duplicatas antes de inserir)
--- ==============================
 
--- Remove usuários test antigos (se existirem)
+
+
+
+
 DELETE FROM users WHERE email IN ('admin@vaidetrem.com','cliente@vaidetrem.com');
 
--- Inserção de admin e cliente com hashes bcrypt
--- OBS.: Senhas em texto claro abaixo (para testes):
--- Admin: admin123
--- Cliente: cliente123
+
+
+
+
 INSERT INTO users (name, email, password, role, avatar)
 VALUES
 ('Administrador', 'admin@vaidetrem.com',
@@ -122,7 +122,7 @@ VALUES
 ('Cliente de Teste', 'cliente@vaidetrem.com',
   '$2y$10$Q3nVsb09TLOE2RSkWnRQhO8Fj8AZqQTBSPi2nZJb3M2N6yS6Kzk3i', 'user', NULL);
 
--- Estações
+
 INSERT IGNORE INTO stations (name, city, state, cep) VALUES
 ('Estação Central - Plataforma 1','São Paulo','SP','01001-000'),
 ('Estação Central - Plataforma 2','São Paulo','SP','01001-000'),
@@ -131,21 +131,21 @@ INSERT IGNORE INTO stations (name, city, state, cep) VALUES
 ('Túnel KM 45','Campinas','SP','13010-000'),
 ('Ponte Rio Grande','Sorocaba','SP','18010-000');
 
--- Rotas
+
 INSERT IGNORE INTO routes (name, status, duration_minutes) VALUES
 ('São Paulo → Rio de Janeiro','ativa',390),
 ('Campinas → Santos','ativa',225),
 ('Belo Horizonte → São Paulo','manutencao',495),
 ('Curitiba → Florianópolis','ativa',320);
 
--- Relacionamento rotas / estações (stop_order)
+
 INSERT IGNORE INTO route_stations (route_id, station_id, stop_order) VALUES
 (1,1,1),(1,3,2),(1,2,3),
 (2,5,1),(2,6,2),
 (3,4,1),(3,1,2),
 (4,3,1),(4,6,2);
 
--- Câmeras
+
 INSERT IGNORE INTO cameras (name, location, status, train_code) VALUES
 ('Câmera #1','Estação Central - Plataforma 1','online','1234'),
 ('Câmera #2','Estação Central - Plataforma 2','online','5678'),
@@ -154,7 +154,7 @@ INSERT IGNORE INTO cameras (name, location, status, train_code) VALUES
 ('Câmera #5','Túnel KM 45','online','9012'),
 ('Câmera #6','Ponte Rio Grande','online','3456');
 
--- Avisos / notices
+
 INSERT IGNORE INTO notices (title, body, tag) VALUES
 ('Manutenção Programada',
  'Linha São Paulo-Rio será interditada dia 15/01 das 02h às 06h para manutenção preventiva.',
@@ -166,16 +166,16 @@ INSERT IGNORE INTO notices (title, body, tag) VALUES
  'Sistema de câmeras atualizado com novos recursos de detecção automática.',
  'Sistema');
 
--- Exemplo de mensagens de chat (opcional)
+
 INSERT IGNORE INTO chat_messages (user_id, message) VALUES
 ( (SELECT id FROM users WHERE email='cliente@vaidetrem.com' LIMIT 1), 'Olá, gostaria de informações sobre a rota SP-RJ.' ),
 ( (SELECT id FROM users WHERE email='admin@vaidetrem.com' LIMIT 1), 'Mensagem de boas-vindas do administrador.' );
 
--- ====================================================
--- FIM do script
--- ====================================================
 
--- att banco de dados
+
+
+
+
 
 DROP DATABASE IF EXISTS vaidetrem2;
 CREATE DATABASE vaidetrem2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -244,9 +244,9 @@ CREATE TABLE chat_messages (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- cria admin e cliente
+
 INSERT INTO users (name,email,password,role) VALUES
 ('Administrador','admin@vaidetrem.com','$2y$10$4uEvjaGCF3Zr7ZSeZb05EOB7JHnIB8uHQzOHcKyImNOf0UbH19V0S','admin'),
 ('Cliente de Teste','cliente@vaidetrem.com','$2y$10$Q3nVsb09TLOE2RSkWnRQhO8Fj8AZqQTBSPi2nZJb3M2N6yS6Kzk3i','user');
--- senha admin: admin123
--- senha cliente: cliente123
+
+

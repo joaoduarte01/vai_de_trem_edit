@@ -1,31 +1,4 @@
-<?php
-require_once('../assets/config/auth.php');
-require_once('../assets/config/db.php');
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create'])) {
-    $name = trim($_POST['name'] ?? '');
-    $status = $_POST['status'] ?? 'ativa';
-    $dur = intval($_POST['duration'] ?? 0);
-
-    if ($name) {
-        $stmt = $mysqli->prepare("INSERT INTO routes (name, status, duration_minutes) VALUES (?, ?, ?)");
-        $stmt->bind_param('ssi', $name, $status, $dur);
-        $stmt->execute();
-    }
-
-    header('Location: rotas.php');
-    exit;
-}
-
-if (isset($_GET['delete'])) {
-    $id = intval($_GET['delete']);
-    $stmt = $mysqli->prepare("DELETE FROM routes WHERE id = ?");
-    $stmt->bind_param('i', $id);
-    $stmt->execute();
-    header('Location: rotas.php');
-    exit;
-}
-?>
+<?php require_once('../assets/config/auth.php'); ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -37,144 +10,107 @@ if (isset($_GET['delete'])) {
 <link href="../assets/css/styles.css" rel="stylesheet">
 
 <style>
-    body {
-        background: #f5f9ff;
-        padding-bottom: 90px;
-        font-family: 'Poppins', sans-serif;
-    }
+body {
+    background: #f5f9ff;
+    padding-bottom: 90px;
+    font-family: 'Poppins', sans-serif;
+}
 
-    /* HEADER */
-    .top-header {
-        background: var(--brand);
-        color: #fff;
-        padding: 18px 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        border-radius: 0 0 18px 18px;
-    }
-    .top-header h1 {
-        font-size: 20px;
-        font-weight: 700;
-    }
+/* HEADER */
+.top-header {
+    background: var(--brand);
+    color: #fff;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 0 0 18px 18px;
+}
+.top-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+}
 
-    /* CARDS */
-    .route-list {
-        padding: 18px;
-        display: grid;
-        gap: 16px;
-    }
+/* LISTA */
+.route-list {
+    padding: 18px;
+    display: grid;
+    gap: 16px;
+}
 
-    .route-card {
-        background: #fff;
-        padding: 18px;
-        border-radius: 16px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-    }
+/* CARD */
+.route-card {
+    background: #fff;
+    padding: 18px;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
 
-    .route-title {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 6px;
-        color: #1e293b;
-    }
+/* PROGRESS BAR */
+.progress-box {
+    margin-top: 14px;
+    background: #eef3ff;
+    border-radius: 12px;
+    height: 12px;
+    position: relative;
+    overflow: hidden;
+}
+.progress {
+    height: 100%;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #00c52b, #32e36e);
+    width: 0%;
+    transition: width 1s ease-in-out;
+}
+.progress.delay {
+    background: linear-gradient(90deg, #facc15, #fcd34d);
+}
 
-    .badge {
-        font-size: 12px;
-        padding: 5px 10px;
-        border-radius: 20px;
-    }
-    .badge.blue { background:#00c52b; color:#fff; }
-    .badge.red { background:#ff6b6b; color:#fff; }
+/* TEXTOS */
+.route-title {
+    font-size: 17px;
+    font-weight: 600;
+}
+.badge.blue { background:#00c52b; color:#fff; }
+.badge.red { background:#ff6b6b; color:#fff; }
 
-    .details {
-        color: #64748b;
-        font-size: 14px;
-        margin-top: 6px;
-    }
+.details {
+    font-size: 14px;
+    color: #64748b;
+    margin-top: 6px;
+}
 
-    .delete-btn {
-        margin-top: 12px;
-        display: inline-block;
-        background: #ff4b4b;
-        padding: 8px 14px;
-        border-radius: 10px;
-        color: #fff;
-        font-size: 13px;
-    }
+.live-info {
+    font-size: 13px;
+    color: #334155;
+    margin-top: 6px;
+}
 
-    /* Floating Button */
-    .fab {
-        position: fixed;
-        right: 20px;
-        bottom: 88px;
-        width: 60px;
-        height: 60px;
-        background: var(--brand);
-        color: #fff;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 28px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.2);
-        cursor: pointer;
-    }
-
-    /* Modal */
-    .modal-bg {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.4);
-        display: none;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
-    }
-
-    .modal {
-        background: #fff;
-        padding: 20px;
-        border-radius: 16px;
-        width: 100%;
-        max-width: 420px;
-    }
-
-    .modal h2 {
-        margin-bottom: 12px;
-    }
-
-    .input, .select {
-        width: 100%;
-        margin: 6px 0;
-    }
-
-    /* Bottom Nav */
-    .bottom-nav {
-        position: fixed; bottom: 0; left: 0; right: 0;
-        background: #fff;
-        height: 70px;
-        display: flex; justify-content: space-around; align-items: center;
-        border-top: 1px solid var(--border);
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
-    }
-    .bottom-nav a {
-        color: var(--muted);
-        text-align: center;
-        font-size: 12px;
-        text-decoration: none;
-    }
-    .bottom-nav i {
-        font-size: 24px;
-        display: block;
-        margin-bottom: 4px;
-    }
-    .active {
-        color: var(--brand) !important;
-    }
+/* BOTTOM NAV */
+.bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #fff;
+    height: 70px;
+    display: flex; justify-content: space-around; align-items: center;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+}
+.bottom-nav a {
+    color: var(--muted);
+    text-align: center;
+    font-size: 12px;
+    text-decoration: none;
+}
+.bottom-nav i {
+    font-size: 24px;
+    display: block;
+}
+.bottom-nav a.active {
+    color: var(--brand);
+}
 </style>
-
 </head>
+
 <body>
 
 <!-- HEADER -->
@@ -182,52 +118,87 @@ if (isset($_GET['delete'])) {
     <h1><i class="ri-route-line"></i> Rotas</h1>
 </div>
 
-<!-- LISTA DE ROTAS -->
 <div class="route-list">
 
-<?php
-$res = $mysqli->query("SELECT * FROM routes ORDER BY id DESC");
+<!-- ROTA 1 -->
+<div class="route-card">
+    <div class="route-title">São Paulo → Rio de Janeiro</div>
+    <span class="badge blue">Ativa</span>
 
-while ($r = $res->fetch_assoc()) {
-    $badge = $r['status'] === 'ativa'
-        ? '<span class="badge blue">Ativa</span>'
-        : '<span class="badge red">Manutenção</span>';
+    <div class="details">
+        <i class="ri-map-pin-line"></i> Paradas: Estação Central • Norte • Sul<br>
+        <i class="ri-time-line"></i> Duração total: 6h 30min
+    </div>
 
-    echo "
-    <div class='route-card'>
-        <div class='route-title'>".htmlspecialchars($r['name'])."</div>
-        $badge
-        <div class='details'><i class='ri-time-line'></i> ".($r['duration_minutes'] ?: '-')." min</div>
-        <a class='delete-btn' href='?delete=".$r['id']."' onclick='return confirm(\"Excluir esta rota?\")'>
-            <i class='ri-delete-bin-line'></i> Excluir
-        </a>
-    </div>";
-}
-?>
+    <div class="live-info">
+        <i class="ri-train-line"></i> Progresso: <b id="p1_text">0%</b> — Chegando em Estação Norte
+    </div>
+
+    <div class="progress-box">
+        <div class="progress" id="p1"></div>
+    </div>
+</div>
+
+<!-- ROTA 2 - ATRASO -->
+<div class="route-card">
+    <div class="route-title">Campinas → Santos</div>
+    <span class="badge blue">Ativa</span>
+
+    <div class="details">
+        <i class="ri-map-pin-line"></i> Paradas: KM45 • Ponte Rio Grande<br>
+        <i class="ri-time-line"></i> Duração total: 3h 45min
+    </div>
+
+    <div class="live-info" style="color:#b45309;">
+        <i class="ri-alert-line"></i> Atraso de 5 minutos — trecho lento
+    </div>
+
+    <div class="progress-box">
+        <div class="progress delay" id="p2"></div>
+    </div>
+</div>
+
+<!-- ROTA 3 - PARADA -->
+<div class="route-card">
+    <div class="route-title">Belo Horizonte → São Paulo</div>
+    <span class="badge red">Manutenção</span>
+
+    <div class="details">
+        <i class="ri-map-pin-line"></i> Paradas: Estação Sul • Central<br>
+        <i class="ri-time-line"></i> Duração: 8h 15min
+    </div>
+
+    <div class="live-info" style="color:#b91c1c;">
+        <i class="ri-error-warning-line"></i> Operação suspensa até 15/11
+    </div>
+
+    <div class="progress-box">
+        <div class="progress delay" style="width:0%"></div>
+    </div>
+</div>
+
+<!-- ROTA 4 -->
+<div class="route-card">
+    <div class="route-title">Curitiba → Florianópolis</div>
+    <span class="badge blue">Ativa</span>
+
+    <div class="details">
+        <i class="ri-map-pin-line"></i> Paradas: Estação Norte • Ponte Rio Grande<br>
+        <i class="ri-time-line"></i> Duração total: 5h 20min
+    </div>
+
+    <div class="live-info">
+        <i class="ri-check-line"></i> Trem pontual — tudo normal
+    </div>
+
+    <div class="progress-box">
+        <div class="progress" id="p4"></div>
+    </div>
+</div>
 
 </div>
 
-<!-- FAB BUTTON -->
-<div class="fab" onclick="openModal()"><i class="ri-add-line"></i></div>
-
-<!-- MODAL NOVA ROTA -->
-<div class="modal-bg" id="modal">
-  <div class="modal">
-    <h2>Nova Rota</h2>
-    <form method="post">
-      <input type="hidden" name="create" value="1">
-      <input class="input" name="name" placeholder="Nome da rota" required>
-      <select class="select" name="status">
-        <option value="ativa">Ativa</option>
-        <option value="manutencao">Manutenção</option>
-      </select>
-      <input class="input" type="number" name="duration" placeholder="Duração (min)">
-      <button class="btn" style="margin-top:10px;width:100%;">Salvar</button>
-    </form>
-  </div>
-</div>
-
-<!-- BOTTOM NAV -->
+<!-- NAV -->
 <div class="bottom-nav">
   <a href="dashboard.php"><i class="ri-dashboard-line"></i>Início</a>
   <a href="rotas.php" class="active"><i class="ri-route-line"></i>Rotas</a>
@@ -237,12 +208,23 @@ while ($r = $res->fetch_assoc()) {
 </div>
 
 <script>
-function openModal() {
-  document.getElementById("modal").style.display = "flex";
+// progresso simulado
+function animateProgress(id, textId, target) {
+    let bar = document.getElementById(id);
+    let txt = document.getElementById(textId);
+    let progress = 0;
+
+    let interval = setInterval(() => {
+        if (progress >= target) clearInterval(interval);
+        progress++;
+        bar.style.width = progress + "%";
+        if (txt) txt.innerText = progress + "%";
+    }, 50);
 }
-window.onclick = e => {
-  if (e.target.id === "modal") document.getElementById("modal").style.display = "none";
-}
+
+animateProgress("p1", "p1_text", 72); // rota 1: 72% concluído
+animateProgress("p2", null, 40);    // rota atrasada
+animateProgress("p4", null, 83);    // rota avançada
 </script>
 
 </body>

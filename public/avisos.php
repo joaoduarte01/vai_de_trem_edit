@@ -2,7 +2,7 @@
 require_once('../assets/config/auth.php'); 
 require_once('../assets/config/db.php');
 
-// Criar aviso
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $title = trim($_POST['title'] ?? '');
   $body  = trim($_POST['body'] ?? '');
@@ -25,17 +25,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Avisos - Vai de Trem</title>
 
-<link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
 <link href="../assets/css/styles.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+
 
 <style>
+
+body {
+  padding-bottom: 90px !important; /* espaço para não sobrepor conteúdo */
+}
+
   body {
     background: #f5f9ff;
     padding-bottom: 90px;
     font-family: 'Poppins', sans-serif;
   }
 
-  /* HEADER */
+ 
   .top-header {
     background: var(--brand);
     color: #fff;
@@ -50,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     font-weight: 700;
   }
 
-  /* FORM */
+ 
   .post-box {
     margin: 20px;
     background: #fff;
@@ -70,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     border-radius: 12px;
   }
 
-  /* CARDS DE AVISOS */
+ 
   .notice-card {
     margin: 18px;
     background: #fff;
@@ -97,30 +103,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     line-height: 1.45;
   }
 
-  /* Bottom Nav */
-  .bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: #fff;
-    height: 70px;
-    display: flex; justify-content: space-around; align-items: center;
-    border-top: 1px solid var(--border);
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
-    z-index: 500;
-  }
-  .bottom-nav a {
-    text-decoration: none;
-    text-align: center;
-    color: var(--muted);
-    font-size: 12px;
-  }
-  .bottom-nav i {
-    font-size: 24px;
-    display: block;
-    margin-bottom: 4px;
-  }
-  .bottom-nav a.active {
-    color: var(--brand);
-  }
+ 
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  height: 70px;
+  display: flex !important;          /* força aparecer mesmo se outro CSS esconder */
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+  z-index: 9999;                     /* sempre por cima */
+}
+
+.bottom-nav a {
+  text-decoration: none;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;            /* ícone em cima, texto embaixo */
+  align-items: center;
+  gap: 2px;
+}
+
+.bottom-nav i {
+  font-size: 22px;
+  display: block;
+}
+
+.bottom-nav a.active {
+  color: var(--brand);
+  font-weight: 600;
+}
+
 </style>
 
 </head>
