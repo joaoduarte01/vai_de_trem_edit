@@ -4,7 +4,7 @@ require_once('../assets/config/db.php');
 
 $feedback = "";
 
-/* CADASTRAR FUNCIONÁRIO */
+/* CADASTRAR FUNCIONÁRIO + LOGIN ADMIN */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   $name   = trim($_POST['name'] ?? '');
@@ -14,11 +14,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $neigh  = trim($_POST['neighborhood'] ?? '');
   $city   = trim($_POST['city'] ?? '');
   $uf     = trim($_POST['uf'] ?? '');
-  $phone  = trim($_POST['phone'] ?? '');
+  
+  // LOGIN ADMIN
+  $email    = trim($_POST['email'] ?? '');
+  $password = trim($_POST['password'] ?? '');
+  $hash     = password_hash($password, PASSWORD_DEFAULT);
 
   // FOTO
   $photo = null;
-  if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+  if (!empty($_FILES['photo']['name'])) {
       $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
       $fname = 'f_'.time().'_'.rand(1000,9999).'.'.$ext;
       $dest = '../assets/uploads/funcionarios/'.$fname;
@@ -28,24 +32,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
   }
 
-  if ($name && $role) {
+  if ($name && $role && $email && $password) {
 
+    /* 1 — INSERIR NA TABELA EMPLOYEES */
     $stmt = $mysqli->prepare("
-      INSERT INTO employees (name, role, cep, street, neighborhood, city, uf, phone, photo)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO employees (name, role, cep, street, neighborhood, city, uf, photo)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ");
     $stmt->bind_param(
-      'sssssssss',
-      $name, $role, $cep, $street, $neigh, $city, $uf, $phone, $photo
+      'ssssssss',
+      $name, $role, $cep, $street, $neigh, $city, $uf, $photo
     );
     $stmt->execute();
+    $stmt->close();
 
-    $feedback = "Funcionário cadastrado com sucesso!";
+    /* 2 — CRIAR LOGIN ADMIN */
+    $stmt2 = $mysqli->prepare("
+      INSERT INTO users (name, email, password, role, avatar)
+      VALUES (?, ?, ?, 'admin', ?)
+    ");
+    $stmt2->bind_param('ssss', $name, $email, $hash, $photo);
+    $stmt2->execute();
+    $stmt2->close();
+
+    $feedback = "Funcionário cadastrado e login admin criado!";
   }
 }
 
-// Carregar lista
 $employees = $mysqli->query("SELECT * FROM employees ORDER BY id DESC");
+
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -61,7 +76,7 @@ $employees = $mysqli->query("SELECT * FROM employees ORDER BY id DESC");
 
 body {
     background:#f5f9ff;
-    padding-bottom:90px;
+    padding-bottom:120px;
     font-family:'Poppins',sans-serif;
 }
 
@@ -80,20 +95,37 @@ body {
     font-weight:700;
 }
 
-/* FORM CARD */
+/* CARD FORM */
 .form-card {
     margin:20px;
-    padding:20px;
     background:#fff;
-    border-radius:16px;
-    box-shadow:0 2px 10px rgba(0,0,0,0.06);
+    border-radius:18px;
+    padding:20px;
+    box-shadow:0 2px 12px rgba(0,0,0,0.06);
 }
 
+.form-card h2 {
+    font-size:18px;
+    margin-bottom:15px;
+}
+
+.btn-save {
+    margin-top:15px;
+    margin-bottom:40px; /* deixa ele ainda mais longe da navbar */
+}
+
+
+/* Inputs */
 .input {
-    margin:8px 0;
+    width:100%;
+    padding:12px;
+    margin:8px 0 4px;
+    border-radius:12px;
+    border:1px solid #d5d8df;
+    font-size:14px;
 }
 
-/* FOTO */
+/* Foto */
 .photo-preview {
     width: 120px;
     height: 120px;
@@ -101,14 +133,28 @@ body {
     object-fit:cover;
     background:#e2e8f0;
     display:block;
-    margin-bottom:10px;
+    margin-bottom:12px;
+}
+
+/* Botão */
+.btn-save {
+    width:100%;
+    padding:12px;
+    background:var(--brand);
+    color:#fff;
+    border:none;
+    border-radius:14px;
+    font-size:15px;
+    font-weight:600;
+    margin-top:15px;
+    cursor:pointer;
 }
 
 /* LISTA */
 .employee-card {
     margin:20px;
     background:#fff;
-    border-radius:16px;
+    border-radius:18px;
     padding:18px;
     box-shadow:0 2px 10px rgba(0,0,0,0.06);
     display:flex;
@@ -123,25 +169,24 @@ body {
     object-fit:cover;
 }
 
-/* NAV MOBILE */
+/* NAV */
 .bottom-nav {
-    position: fixed; bottom:0; left:0; right:0;
+    position:fixed; bottom:0; left:0; right:0;
     background:#fff;
     border-top:1px solid var(--border);
     display:flex;
     justify-content:space-around;
     padding:10px 0;
-    box-shadow:0 -4px 12px rgba(0,0,0,0.05);
 }
 .bottom-nav a {
-    text-decoration:none;
     color:#64748b;
+    text-decoration:none;
     font-size:12px;
     display:flex;
     flex-direction:column;
     align-items:center;
 }
-.bottom-nav a.active {
+.bottom-nav .active {
     color:var(--brand);
 }
 
@@ -149,21 +194,41 @@ body {
 
 <script>
 async function buscarCEP() {
-    let cep = document.getElementById("cep").value.replace(/\D/g,'');
-    if (cep.length !== 8) return;
+    const cep = document.getElementById("cep").value.replace(/\D/g,'');
 
-    let url = `https://viacep.com.br/ws/${cep}/json/`;
-
-    let data = await fetch(url).then(r => r.json());
-
-    if (!data.erro) {
-        document.getElementById("street").value = data.logradouro;
-        document.getElementById("neighborhood").value = data.bairro;
-        document.getElementById("city").value = data.localidade;
-        document.getElementById("uf").value = data.uf;
+    if (cep.length !== 8) {
+        alert("CEP inválido! Digite 8 números.");
+        return;
     }
+
+    const url = `https://viacep.com.br/ws/${cep}/json/`;
+    const data = await fetch(url).then(r => r.json());
+
+    if (data.erro) {
+        alert("CEP não encontrado.");
+        return;
+    }
+
+    // Preenche os campos
+    document.getElementById("street").value       = data.logradouro;
+    document.getElementById("neighborhood").value = data.bairro;
+    document.getElementById("city").value         = data.localidade;
+    document.getElementById("uf").value           = data.uf;
+
+    // Efeito visual de confirmado
+    flashFields();
+}
+
+function flashFields() {
+    const fields = ["street","neighborhood","city","uf"];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        el.style.background = "#d1fae5"; // verde claro
+        setTimeout(() => el.style.background = "", 800);
+    });
 }
 </script>
+
 
 </head>
 <body>
@@ -175,14 +240,15 @@ async function buscarCEP() {
 
 <!-- FEEDBACK -->
 <?php if ($feedback): ?>
-<div class="badge" style="margin:20px;"><?php echo $feedback; ?></div>
+<div class="badge" style="margin:20px;font-size:14px;"><?php echo $feedback; ?></div>
 <?php endif; ?>
 
-<!-- FORM DE CADASTRO -->
+<!-- FORM -->
 <div class="form-card">
-  <h2>Cadastrar Novo Funcionário</h2>
 
-  <form method="post" enctype="multipart/form-data">
+<h2>Cadastrar Funcionário</h2>
+
+<form method="post" enctype="multipart/form-data">
 
     <img id="preview" class="photo-preview" src="../assets/uploads/profile_photos/avatar-default.png">
 
@@ -191,19 +257,26 @@ async function buscarCEP() {
 
     <input class="input" name="name" placeholder="Nome completo" required>
     <input class="input" name="role" placeholder="Cargo no sistema" required>
-    <input class="input" name="phone" placeholder="Telefone">
 
-    <div class="row cols-3">
-      <input class="input" id="cep" name="cep" placeholder="CEP" onblur="buscarCEP()">
-      <input class="input" id="city" name="city" placeholder="Cidade">
-      <input class="input" id="uf" name="uf" placeholder="UF">
-    </div>
+    <input class="input" name="email" type="email" placeholder="E-mail de login" required>
+    <input class="input" name="password" type="password" placeholder="Senha de acesso" required>
 
+    <input class="input" id="cep" name="cep" placeholder="CEP" onblur="buscarCEP()">
+    <div style="display:flex; gap:10px; align-items:center;">
+    <button type="button" class="btn" onclick="buscarCEP()" style="padding:10px 14px;">
+        Verificar
+    </button>
+</div>
+
+    <input class="input" id="city" name="city" placeholder="Cidade">
+    <input class="input" id="uf" name="uf" placeholder="UF">
     <input class="input" id="street" name="street" placeholder="Rua">
     <input class="input" id="neighborhood" name="neighborhood" placeholder="Bairro">
 
-    <button class="btn" style="margin-top:10px;width:100%;">Salvar Funcionário</button>
-  </form>
+    <button class="btn-save">Salvar Funcionário</button>
+
+</form>
+
 </div>
 
 <!-- LISTA -->
@@ -214,16 +287,16 @@ async function buscarCEP() {
      : '../assets/uploads/profile_photos/avatar-default.png'; ?>">
 
   <div>
-    <div><strong><?php echo htmlspecialchars($f['name']); ?></strong></div>
-    <div class="link-muted"><?php echo htmlspecialchars($f['role']); ?></div>
-    <div class="link-muted"><i class="ri-map-pin-line"></i> <?php echo $f['city']." - ".$f['uf']; ?></div>
+    <strong><?php echo htmlspecialchars($f['name']); ?></strong><br>
+    <small><?php echo htmlspecialchars($f['role']); ?></small><br>
+    <small><i class="ri-map-pin-line"></i> <?php echo $f['city']." - ".$f['uf']; ?></small>
   </div>
 </div>
 <?php endwhile; ?>
 
-
+<!-- NAV -->
 <div class="bottom-nav">
-  <a href="dashboard.php" class="active">
+  <a href="dashboard.php">
     <i class="ri-dashboard-line"></i>
     <span>Início</span>
   </a>
@@ -238,7 +311,7 @@ async function buscarCEP() {
     <span>Chat</span>
   </a>
 
-  <a href="funcionarios.php">
+  <a href="funcionarios.php" class="active">
     <i class="ri-team-line"></i>
     <span>Funcionários</span>
   </a>
@@ -248,6 +321,7 @@ async function buscarCEP() {
     <span>Sair</span>
   </a>
 </div>
+
 
 </body>
 </html>

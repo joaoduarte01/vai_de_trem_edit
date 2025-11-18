@@ -176,7 +176,6 @@ require_once('../assets/config/db.php');
   $routesAtivas  = $mysqli->query("SELECT COUNT(*) AS total FROM routes WHERE status='ativa'")->fetch_assoc()['total'];
   $notices       = $mysqli->query("SELECT COUNT(*) AS total FROM notices")->fetch_assoc()['total'];
   $employees     = $mysqli->query("SELECT COUNT(*) AS total FROM employees")->fetch_assoc()['total'];
-  $cameras       = $mysqli->query("SELECT COUNT(*) AS total FROM cameras")->fetch_assoc()['total'];
 ?>
 
 <!-- STATS -->
@@ -185,12 +184,6 @@ require_once('../assets/config/db.php');
     <i class="ri-route-line"></i>
     <div class="stat-value"><?php echo $routesAtivas; ?></div>
     <div class="stat-label">Rotas Ativas</div>
-  </div>
-
-  <div class="stat-card">
-    <i class="ri-camera-line"></i>
-    <div class="stat-value"><?php echo $cameras; ?></div>
-    <div class="stat-label">Câmeras</div>
   </div>
 
   <div class="stat-card">
