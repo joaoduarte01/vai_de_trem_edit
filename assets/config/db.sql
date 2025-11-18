@@ -250,3 +250,16 @@ INSERT INTO users (name,email,password,role) VALUES
 ('Cliente de Teste','cliente@vaidetrem.com','$2y$10$Q3nVsb09TLOE2RSkWnRQhO8Fj8AZqQTBSPi2nZJb3M2N6yS6Kzk3i','user');
 
 
+CREATE TABLE employees (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(150) NOT NULL,
+  role VARCHAR(120) NOT NULL,
+  phone VARCHAR(30),
+  cep VARCHAR(12),
+  street VARCHAR(200),
+  neighborhood VARCHAR(150),
+  city VARCHAR(120),
+  uf VARCHAR(4),
+  photo VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

@@ -162,20 +162,29 @@ require_once('../assets/config/db.php');
 
 <!-- NAV MOBILE -->
 <div class="bottom-nav">
-  <a href="dashboard.php">
-    <i class="ri-dashboard-line"></i>Início
+  <a href="dashboard.php" class="active">
+    <i class="ri-dashboard-line"></i>
+    <span>Início</span>
   </a>
+
   <a href="rotas.php">
-    <i class="ri-route-line"></i>Rotas
+    <i class="ri-route-line"></i>
+    <span>Rotas</span>
   </a>
-  <a href="cameras.php">
-    <i class="ri-camera-line"></i>Câmeras
+
+  <a href="chat.php">
+    <i class="ri-message-3-line"></i>
+    <span>Chat</span>
   </a>
-  <a href="avisos.php">
-    <i class="ri-notification-3-line"></i>Avisos
+
+  <a href="funcionarios.php">
+    <i class="ri-team-line"></i>
+    <span>Funcionários</span>
   </a>
-  <a href="relatorios.php" class="active">
-    <i class="ri-bar-chart-line"></i>Relatórios
+
+  <a href="logout_admin.php">
+    <i class="ri-logout-box-r-line"></i>
+    <span>Sair</span>
   </a>
 </div>
 

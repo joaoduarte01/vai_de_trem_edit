@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <style>
 
 body {
-  padding-bottom: 90px !important; /* espaço para não sobrepor conteúdo */
+  padding-bottom: 90px !important; 
 }
 
   body {
@@ -116,7 +116,7 @@ body {
   align-items: center;
   border-top: 1px solid var(--border);
   box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
-  z-index: 9999;                     /* sempre por cima */
+  z-index: 9999;                     
 }
 
 .bottom-nav a {
@@ -125,7 +125,7 @@ body {
   color: var(--muted);
   font-size: 12px;
   display: flex;
-  flex-direction: column;            /* ícone em cima, texto embaixo */
+  flex-direction: column;           
   align-items: center;
   gap: 2px;
 }
@@ -145,12 +145,10 @@ body {
 </head>
 <body>
 
-<!-- Header -->
 <div class="top-header">
   <h1><i class="ri-notification-3-line"></i> Avisos</h1>
 </div>
 
-<!-- Caixa de Postagem -->
 <div class="post-box">
   <h2>Criar Aviso</h2>
   <form method="post">
@@ -194,11 +192,25 @@ while ($n = $res->fetch_assoc()) {
 
 <!-- Bottom Nav -->
 <div class="bottom-nav">
-  <a href="dashboard.php"><i class="ri-dashboard-line"></i>Início</a>
-  <a href="rotas.php"><i class="ri-route-line"></i>Rotas</a>
-  <a href="cameras.php"><i class="ri-camera-line"></i>Câmeras</a>
-  <a href="avisos.php" class="active"><i class="ri-notification-3-line"></i>Avisos</a>
-  <a href="meu_perfil.php"><i class="ri-user-3-line"></i>Perfil</a>
+  <a href="dashboard.php" class="active">
+    <i class="ri-dashboard-line"></i>
+    <span>Início</span>
+  </a>
+
+  <a href="rotas.php">
+    <i class="ri-route-line"></i>
+    <span>Rotas</span>
+  </a>
+
+  <a href="avisos.php">
+    <i class="ri-notification-3-line"></i>
+    <span>Avisos</span>
+  </a>
+
+  <a href="meu_perfil.php">
+    <i class="ri-user-3-line"></i>
+    <span>Perfil</span>
+  </a>
 </div>
 
 </body>

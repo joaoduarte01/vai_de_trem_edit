@@ -10,8 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
         $stmt->bind_param('is', $user['id'], $msg);
         $stmt->execute();
     }
-    header('Location: chat.php');
-    exit;
+    exit; // AJAX não recarrega a página
 }
 ?>
 <!DOCTYPE html>
@@ -26,12 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
 
 <style>
 body {
-    background: #f1f5fb;
+    background: #eef3fc;
     font-family: 'Poppins', sans-serif;
     padding-bottom: 90px;
 }
 
-/* HEADER */
+/* ===== HEADER ===== */
 .chat-header {
     background: var(--brand);
     color: #fff;
@@ -41,65 +40,78 @@ body {
     gap: 12px;
     border-radius: 0 0 18px 18px;
 }
-.chat-header i {
-    font-size: 22px;
-}
 .chat-header h1 {
     font-size: 18px;
     font-weight: 600;
 }
 
-/* CHAT AREA */
+/* ===== CHAT CONTAINER ===== */
 .chat-box {
-    height: calc(100vh - 220px);
+    height: calc(100vh - 260px);
     overflow-y: auto;
-    padding: 18px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
 }
 
 .msg {
     display: flex;
-    max-width: 75%;
+    max-width: 85%;
+    gap: 8px;
+}
+.msg.me { margin-left: auto; flex-direction: row-reverse; }
+
+/* Avatares */
+.avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
 }
 
-.msg.other { justify-content: flex-start; }
-.msg.me { justify-content: flex-end; }
-
+/* BOLHAS DE MENSAGEM */
 .bubble {
     padding: 12px 14px;
-    border-radius: 16px;
+    border-radius: 18px;
     font-size: 14px;
     line-height: 1.4;
     max-width: 100%;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-}
-
-.msg.other .bubble {
-    background: #fff;
-    color: #1e293b;
-    border-bottom-left-radius: 4px;
 }
 .msg.me .bubble {
     background: var(--brand);
     color: #fff;
-    border-bottom-right-radius: 4px;
+    border-bottom-right-radius: 6px;
+}
+.msg.other .bubble {
+    background: #fff;
+    color: #1e293b;
+    border-bottom-left-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 
 .bubble small {
+    font-size: 11px;
+    opacity: 0.65;
     display: block;
     margin-top: 6px;
-    font-size: 11px;
-    opacity: 0.7;
 }
 
-/* INPUT */
+/* ===== TYPING INDICATOR ===== */
+.typing {
+    display: none;
+    padding: 10px 20px;
+    font-size: 13px;
+    color: #64748b;
+}
+
+/* ===== INPUT ===== */
 .chat-input-area {
     position: fixed;
     bottom: 70px;
     left: 0; right: 0;
-    padding: 10px 12px;
+    padding: 10px 14px;
     background: #fff;
     border-top: 1px solid var(--border);
     display: flex;
@@ -108,45 +120,53 @@ body {
 
 .chat-input-area input {
     flex: 1;
-    border-radius: 20px;
+    border-radius: 22px;
+    padding: 12px 16px;
 }
 
 .send-btn {
     background: var(--brand);
     border: none;
-    border-radius: 20px;
-    padding: 0 16px;
+    border-radius: 50%;
+    width: 46px;
+    height: 46px;
     color: #fff;
-    font-size: 20px;
+    font-size: 22px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-/* Aviso */
+/* ===== ONLINE USERS ===== */
 .online-box {
     background: #fff;
     padding: 18px;
     border-radius: 14px;
-    margin: 18px;
+    margin: 20px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.06);
 }
-.online-box h2 {
-    font-size: 16px;
-    margin-bottom: 8px;
-}
 .online-user {
-    padding: 10px 0;
-    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
 }
-.online-box small {
-    color: #6b7280;
+.online-dot {
+    width: 10px;
+    height: 10px;
+    background: #22c55e;
+    border-radius: 50%;
 }
 
-/* Bottom nav */
+/* NAV MOBILE */
 .bottom-nav {
     position: fixed;
     bottom: 0; left: 0; right: 0;
     background: #fff;
     height: 70px;
-    display: flex; justify-content: space-around; align-items: center;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
     border-top: 1px solid var(--border);
     box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
 }
@@ -154,14 +174,8 @@ body {
     color: var(--muted);
     text-align: center;
     font-size: 12px;
-    text-decoration: none;
 }
-.bottom-nav i {
-    font-size: 24px;
-}
-.active {
-    color: var(--brand) !important;
-}
+.bottom-nav a.active { color: var(--brand); }
 </style>
 </head>
 <body>
@@ -172,61 +186,99 @@ body {
     <h1>Chat de Suporte</h1>
 </div>
 
-<!-- CHAT -->
-<div class="chat-box" id="chatBox">
-    <?php
-    $res = $mysqli->query("
-        SELECT c.*, u.name, u.role 
-        FROM chat_messages c
-        JOIN users u ON u.id = c.user_id
-        ORDER BY c.id ASC
-    ");
+<!-- CHAT AREA -->
+<div class="chat-box" id="chatBox"></div>
 
-    while ($m = $res->fetch_assoc()) {
-        $me = $m['user_id'] == $user['id'] ? 'me' : 'other';
-        $tag = $m['role'] === 'admin' ? "<small style='color:#00c52b'>Admin</small>" : "";
-        
-        echo "
-        <div class='msg $me'>
-            <div class='bubble'>
-                <strong>".htmlspecialchars($m['name'])."</strong> $tag<br>
-                ".htmlspecialchars($m['message'])."
-                <small>".$m['created_at']."</small>
-            </div>
-        </div>
-        ";
-    }
-    ?>
+<div class="typing" id="typingIndicator">
+    Suporte está digitando...
 </div>
 
 <!-- INPUT -->
-<form method="post" class="chat-input-area">
-    <input class="input" name="message" placeholder="Digite sua mensagem..." required>
+<form class="chat-input-area" id="chatForm">
+    <input class="input" id="chatMessage" name="message" placeholder="Digite sua mensagem..." required>
     <button class="send-btn"><i class="ri-send-plane-2-line"></i></button>
 </form>
 
-<!-- ONLINE LIST -->
+<!-- ONLINE USERS -->
 <div class="online-box">
-    <h2>Usuários Online</h2>
-    <div class="online-user">Administrador</div>
-    <div class="online-user">Equipe de Suporte</div>
-    <div class="online-user" style="border:none;">Operações</div>
-    <small>* Lista ilustrativa.</small>
+    <h3 style="font-size:16px;margin-bottom:10px;">Usuários Online</h3>
+
+    <div class="online-user"><span class="online-dot"></span>Administrador</div>
+    <div class="online-user"><span class="online-dot"></span>Central de Controle</div>
+    <div class="online-user"><span class="online-dot"></span>Operações</div>
+
+    <small style="color:#6b7280;display:block;margin-top:6px;">* Lista ilustrativa</small>
 </div>
 
 <!-- NAVIGATION -->
 <div class="bottom-nav">
-    <a href="dashboard.php"><i class="ri-dashboard-line"></i>Início</a>
-    <a href="rotas.php"><i class="ri-route-line"></i>Rotas</a>
-    <a href="cameras.php"><i class="ri-camera-line"></i>Câmeras</a>
-    <a href="avisos.php"><i class="ri-notification-3-line"></i>Avisos</a>
-    <a href="chat.php" class="active"><i class="ri-message-3-line"></i>Chat</a>
-    <a href="meu_perfil.php"><i class="ri-user-line"></i>Perfil</a>
+  <a href="dashboard.php" class="active">
+    <i class="ri-dashboard-line"></i>
+    <span>Início</span>
+  </a>
+
+  <a href="rotas.php">
+    <i class="ri-route-line"></i>
+    <span>Rotas</span>
+  </a>
+
+  <a href="chat.php">
+    <i class="ri-message-3-line"></i>
+    <span>Chat</span>
+  </a>
+
+  <a href="funcionarios.php">
+    <i class="ri-team-line"></i>
+    <span>Funcionários</span>
+  </a>
+
+  <a href="logout_admin.php">
+    <i class="ri-logout-box-r-line"></i>
+    <span>Sair</span>
+  </a>
 </div>
 
 <script>
-let chat = document.getElementById("chatBox");
-chat.scrollTop = chat.scrollHeight;
+// Scroll automático
+function scrollChat() {
+    const box = document.getElementById("chatBox");
+    box.scrollTop = box.scrollHeight;
+}
+
+// Buscar mensagens (AJAX)
+function loadMessages() {
+    fetch("chat_loader.php")
+        .then(r => r.text())
+        .then(html => {
+            document.getElementById("chatBox").innerHTML = html;
+            scrollChat();
+        });
+}
+setInterval(loadMessages, 3000);
+loadMessages();
+
+// Enviar mensagem AJAX
+document.getElementById("chatForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    let msg = document.getElementById("chatMessage").value.trim();
+    if (!msg) return;
+
+    let formData = new FormData();
+    formData.append("message", msg);
+
+    document.getElementById("typingIndicator").style.display = "block";
+
+    await fetch("chat.php", {
+        method: "POST",
+        body: formData
+    });
+
+    document.getElementById("chatMessage").value = "";
+    document.getElementById("typingIndicator").style.display = "none";
+
+    loadMessages();
+});
 </script>
 
 </body>
