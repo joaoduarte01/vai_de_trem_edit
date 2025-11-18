@@ -148,14 +148,14 @@ require_once('../assets/config/db.php');
 
   <div class="chart-card">
     <strong>Passageiros e Viagens por Mês</strong>
-    <div class="chart-sub">Últimos 6 meses (mock)</div>
-    <img src="https://dummyimage.com/600x260/e9f2ff/1e66ff.png&text=Line+Chart" alt="chart">
+    <div class="chart-sub">Últimos 6 meses </div>
+    <img src="https://lh3.googleusercontent.com/proxy/pwoqK6twvju66cX__T7YUn5z7j6NMnuxI6rsm1JDIXNFSxk0fGskGciuYQl3cwvP6PvnsA9J8khDrsrexXElt-GjIDtntAFWKRG_jDyCKj3-q58WVM6we2ArCxTxwY-bStGAgIMwf4ko-HX6" alt="chart">
   </div>
 
   <div class="chart-card">
     <strong>Distribuição por Rota</strong>
-    <div class="chart-sub">Percentual de uso (mock)</div>
-    <img src="https://dummyimage.com/600x260/e9f2ff/1e66ff.png&text=Pie+Chart" alt="chart">
+    <div class="chart-sub">Percentual de uso </div>
+    <img src="https://learn.microsoft.com/pt-br/sql/reporting-services/media/report-builder-column-chart-moving-average.png?view=sql-server-ver17" alt="chart">
   </div>
 
 </div>
