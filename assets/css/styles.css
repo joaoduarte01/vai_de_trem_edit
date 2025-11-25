@@ -1,6 +1,52 @@
 /* =========================
-   DESIGN TOKENS / RESET
+   CENTRALIZAR LOGOS / AVATARES
    ========================= */
+
+/* Logos grandes nos cards de login / registro */
+.card-login .brand-icon,
+.card-register .brand-icon {
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 12px;
+}
+
+/* Ícone redondo de perfil */
+.profile-icon {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Avatar grande do box de perfil já está em .avatar-box img,
+   mas garantimos centralização caso mude o HTML */
+.avatar-box img {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* =========================
+   CENTRALIZAR EMOJIS / ÍCONES
+   ========================= */
+
+/* Use em elementos que tenham só emoji/ícone dentro */
+.emoji-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px; /* aumenta um pouco o emoji */
+}
+
+/* Útil pra ícones soltos dentro de cards, títulos, etc. */
+.icon-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Se quiser texto + emoji tudo centralizado em bloco: */
+.text-center {
+  text-align: center;
+}
+
 
 :root {
   --bg: #f5f9ff;
