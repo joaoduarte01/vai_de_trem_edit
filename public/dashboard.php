@@ -18,10 +18,6 @@ require_once('../assets/config/db.php');
 <!-- HEADER -->
 <div class="top-header">
   <h1><i class="ri-dashboard-line"></i> Dashboard</h1>
-  <div style="display:flex;align-items:center;gap:10px;">
-    <span><?php echo htmlspecialchars($user['name']); ?></span>
-    <a href="logout.php"><i class="ri-logout-circle-line" style="font-size:22px;color:#fff;"></i></a>
-  </div>
 </div>
 
 <?php
