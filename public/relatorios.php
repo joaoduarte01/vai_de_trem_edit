@@ -45,13 +45,13 @@ require_once('../assets/config/db.php');
   <div class="chart-card">
     <strong>Passageiros e Viagens por Mês</strong>
     <div class="chart-sub">Últimos 6 meses </div>
-    <img src="https://lh3.googleusercontent.com/proxy/pwoqK6twvju66cX__T7YUn5z7j6NMnuxI6rsm1JDIXNFSxk0fGskGciuYQl3cwvP6PvnsA9J8khDrsrexXElt-GjIDtntAFWKRG_jDyCKj3-q58WVM6we2ArCxTxwY-bStGAgIMwf4ko-HX6" alt="chart">
+    <img src="https://s3.amazonaws.com/thumbnails.venngage.com/template/0e364154-2c6b-43d4-a2c5-fee2da9c77a5.png" alt="gráfico">
   </div>
 
   <div class="chart-card">
     <strong>Distribuição por Rota</strong>
     <div class="chart-sub">Percentual de uso </div>
-    <img src="https://learn.microsoft.com/pt-br/sql/reporting-services/media/report-builder-column-chart-moving-average.png?view=sql-server-ver17" alt="chart">
+    <img src="https://learn.microsoft.com/pt-br/sql/reporting-services/media/report-builder-column-chart-moving-average.png?view=sql-server-ver17" alt="gráfico">
   </div>
 
 </div>

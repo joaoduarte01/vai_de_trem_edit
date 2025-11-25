@@ -89,11 +89,11 @@
 <!-- MODAL VISUAL -->
 <div class="modal-bg" id="modal">
     <div class="modal">
-        <h2>Nova Rota (Visual)</h2>
+        <h2>Nova Rota </h2>
         <input class="input" placeholder="Nome da rota">
         <input class="input" placeholder="Paradas">
         <input class="input" placeholder="Duração (ex: 5h 30min)">
-        <button class="btn" style="margin-top:10px;width:100%;" onclick="closeModal()">Salvar (Visual)</button>
+        <button class="btn" style="margin-top:10px;width:100%;" onclick="closeModal()">Salvar </button>
     </div>
 </div>
 
