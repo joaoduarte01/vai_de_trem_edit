@@ -1,19 +1,9 @@
-
-
-
-
-
-
-
 DROP DATABASE IF EXISTS vaidetrem2;
 
 CREATE DATABASE IF NOT EXISTS vaidetrem2
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 USE vaidetrem2;
-
-
-
 
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,9 +19,6 @@ CREATE TABLE IF NOT EXISTS users (
   CONSTRAINT uq_users_email UNIQUE (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
-
-
 CREATE TABLE IF NOT EXISTS stations (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
@@ -41,9 +28,6 @@ CREATE TABLE IF NOT EXISTS stations (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
-
-
 CREATE TABLE IF NOT EXISTS routes (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(200) NOT NULL,
@@ -51,10 +35,6 @@ CREATE TABLE IF NOT EXISTS routes (
   duration_minutes INT DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-
-
-
 
 CREATE TABLE IF NOT EXISTS route_stations (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -69,9 +49,6 @@ CREATE TABLE IF NOT EXISTS route_stations (
   CONSTRAINT uq_route_stop UNIQUE (route_id, stop_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
-
-
 CREATE TABLE IF NOT EXISTS cameras (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
@@ -81,9 +58,6 @@ CREATE TABLE IF NOT EXISTS cameras (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
-
-
 CREATE TABLE IF NOT EXISTS notices (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(200) NOT NULL,
@@ -91,9 +65,6 @@ CREATE TABLE IF NOT EXISTS notices (
   tag ENUM('Manutenção','Novidades','Sistema') DEFAULT 'Sistema',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-
-
 
 CREATE TABLE IF NOT EXISTS chat_messages (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -104,24 +75,13 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
-
-
-
-
 DELETE FROM users WHERE email IN ('admin@vaidetrem.com','cliente@vaidetrem.com');
-
-
-
-
-
 INSERT INTO users (name, email, password, role, avatar)
 VALUES
 ('Administrador', 'admin@vaidetrem.com',
   '$2y$10$4uEvjaGCF3Zr7ZSeZb05EOB7JHnIB8uHQzOHcKyImNOf0UbH19V0S', 'admin', NULL),
 ('Cliente de Teste', 'cliente@vaidetrem.com',
   '$2y$10$Q3nVsb09TLOE2RSkWnRQhO8Fj8AZqQTBSPi2nZJb3M2N6yS6Kzk3i', 'user', NULL);
-
 
 INSERT IGNORE INTO stations (name, city, state, cep) VALUES
 ('Estação Central - Plataforma 1','São Paulo','SP','01001-000'),
@@ -145,7 +105,6 @@ INSERT IGNORE INTO route_stations (route_id, station_id, stop_order) VALUES
 (3,4,1),(3,1,2),
 (4,3,1),(4,6,2);
 
-
 INSERT IGNORE INTO cameras (name, location, status, train_code) VALUES
 ('Câmera #1','Estação Central - Plataforma 1','online','1234'),
 ('Câmera #2','Estação Central - Plataforma 2','online','5678'),
@@ -153,7 +112,6 @@ INSERT IGNORE INTO cameras (name, location, status, train_code) VALUES
 ('Câmera #4','Estação Sul - Plataforma 1','offline',NULL),
 ('Câmera #5','Túnel KM 45','online','9012'),
 ('Câmera #6','Ponte Rio Grande','online','3456');
-
 
 INSERT IGNORE INTO notices (title, body, tag) VALUES
 ('Manutenção Programada',
@@ -166,16 +124,9 @@ INSERT IGNORE INTO notices (title, body, tag) VALUES
  'Sistema de câmeras atualizado com novos recursos de detecção automática.',
  'Sistema');
 
-
 INSERT IGNORE INTO chat_messages (user_id, message) VALUES
 ( (SELECT id FROM users WHERE email='cliente@vaidetrem.com' LIMIT 1), 'Olá, gostaria de informações sobre a rota SP-RJ.' ),
 ( (SELECT id FROM users WHERE email='admin@vaidetrem.com' LIMIT 1), 'Mensagem de boas-vindas do administrador.' );
-
-
-
-
-
-
 
 DROP DATABASE IF EXISTS vaidetrem2;
 CREATE DATABASE vaidetrem2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

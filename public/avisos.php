@@ -190,7 +190,6 @@ while ($n = $res->fetch_assoc()) {
 }
 ?>
 
-<!-- Bottom Nav -->
 <div class="bottom-nav">
   <a href="dashboard.php" class="active">
     <i class="ri-dashboard-line"></i>
@@ -202,14 +201,19 @@ while ($n = $res->fetch_assoc()) {
     <span>Rotas</span>
   </a>
 
-  <a href="avisos.php">
-    <i class="ri-notification-3-line"></i>
-    <span>Avisos</span>
+  <a href="chat.php">
+    <i class="ri-message-3-line"></i>
+    <span>Chat</span>
   </a>
 
-  <a href="meu_perfil.php">
-    <i class="ri-user-3-line"></i>
-    <span>Perfil</span>
+  <a href="funcionarios.php">
+    <i class="ri-team-line"></i>
+    <span>Funcionários</span>
+  </a>
+
+  <a href="logout_admin.php">
+    <i class="ri-logout-box-r-line"></i>
+    <span>Sair</span>
   </a>
 </div>
 
