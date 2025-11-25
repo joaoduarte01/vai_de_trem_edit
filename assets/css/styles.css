@@ -299,7 +299,6 @@ a:hover {
   .navbar a { padding: 8px; }
 }
 
-/* --- MOBILE BOTTOM NAV (GLOBAL) --- */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -312,7 +311,7 @@ a:hover {
   align-items: center;
   border-top: 1px solid var(--border);
   box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
-  z-index: 999999 !important; /* máximo pra não sumir */
+  z-index: 999999 !important;
 }
 
 .bottom-nav a {
@@ -337,7 +336,6 @@ a:hover {
 }
 
 @media (min-width: 768px) {
-  /* oculta no desktop */
   .bottom-nav {
     display: none !important;
   }
