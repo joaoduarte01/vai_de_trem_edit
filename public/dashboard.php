@@ -214,11 +214,6 @@ require_once('../assets/config/db.php');
       <div class="quick-card-title">Chat</div>
     </a>
 
-    <a href="cameras.php" class="quick-card">
-      <i class="ri-camera-line"></i>
-      <div class="quick-card-title">Câmeras</div>
-    </a>
-
     <a href="rotas.php" class="quick-card">
       <i class="ri-route-line"></i>
       <div class="quick-card-title">Rotas</div>
