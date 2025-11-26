@@ -60,7 +60,7 @@
             <i class="ri-time-line"></i> Duração: 8h 15min
         </div>
 
-        <div class="live-info" style="color:#b91c1c;background:#ffecec;">
+        <div class="live-info">
             <i class="ri-error-warning-line"></i> Operação suspensa até 15/11
         </div>
     </div>

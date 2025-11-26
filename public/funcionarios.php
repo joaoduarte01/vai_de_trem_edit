@@ -103,8 +103,8 @@ function flashFields() {
     const fields = ["street","neighborhood","city","uf"];
     fields.forEach(id => {
         const el = document.getElementById(id);
-        el.style.background = "#d1fae5"; // verde claro
-        setTimeout(() => el.style.background = "", 800);
+        el.style.borderColor = "#000"; // visual indicator
+        setTimeout(() => el.style.borderColor = "", 800);
     });
 }
 </script>
