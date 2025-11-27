@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   if ($email && $pass) {
     $stmt = $mysqli->prepare("SELECT id,name,email,password,role FROM users WHERE email=? LIMIT 1");
-    $stmt->bind_param('s',$email);
+    $stmt->bind_param('s', $email);
     $stmt->execute();
     $res = $stmt->get_result();
 
@@ -21,49 +21,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       } else {
         $error = 'Acesso negado. Esta conta não é de administrador.';
       }
-    } else $error = 'Usuário não encontrado.';
-  } else $error = 'Preencha todos os campos.';
+    } else
+      $error = 'Usuário não encontrado.';
+  } else
+    $error = 'Preencha todos os campos.';
 }
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Login Administrativo - Vai de Trem</title>
 
-<link href="../assets/css/styles.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login Administrativo - Vai de Trem</title>
+
+  <link href="../assets/css/styles.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
 
 </head>
+
 <body>
 
-<div class="card-login">
+  <div class="card-login">
 
-  <div class="brand-icon"><i class="ri-shield-user-line"></i></div>
+    <div class="brand-icon"><img src="../assets/images/icone_adm.png" alt="Admin" class="icon-img"
+        style="width:52px;height:52px;"></div>
 
-  <h2>Área Administrativa</h2>
-  <div class="sub">Acesso restrito</div>
+    <h2>Área Administrativa</h2>
+    <div class="sub">Acesso restrito</div>
 
-  <?php if ($error): ?>
-    <div class="error-box"><?php echo htmlspecialchars($error); ?></div>
-  <?php endif; ?>
+    <?php if ($error): ?>
+      <div class="error-box"><?php echo htmlspecialchars($error); ?></div>
+    <?php endif; ?>
 
-  <form method="post">
-    <label>Email</label>
-    <input class="input" type="email" name="email" placeholder="admin@vaidetrem.com" required>
+    <form method="post">
+      <label>Email</label>
+      <input class="input" type="email" name="email" placeholder="admin@vaidetrem.com" required>
 
-    <label style="margin-top:12px;">Senha</label>
-    <input class="input" type="password" name="password" placeholder="Senha" required>
+      <label style="margin-top:12px;">Senha</label>
+      <input class="input" type="password" name="password" placeholder="Senha" required>
 
-    <button class="btn-login" type="submit">Entrar</button>
-  </form>
+      <button class="btn-login" type="submit">Entrar</button>
+    </form>
 
-  <a href="login.php" class="back-link">
-    <i class="ri-arrow-left-line"></i> Voltar ao login de clientes
-  </a>
+    <a href="login.php" class="back-link">
+      <img src="../assets/images/logout_icone.png" alt="Voltar" class="icon-img"
+        style="width:16px;height:16px;transform: rotate(180deg);"> Voltar ao login de clientes
+    </a>
 
-</div>
+  </div>
 
 </body>
+
 </html>

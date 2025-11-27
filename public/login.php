@@ -55,61 +55,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Login - Vai de Trem</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login - Vai de Trem</title>
 
-<link href="../assets/css/styles.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+  <link href="../assets/css/styles.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
 
-</style>
+  </style>
 </head>
 
 <body>
 
-<div class="card-login">
+  <div class="card-login">
 
-  <div class="brand-icon"><i class="ri-train-line"></i></div>
+    <div class="brand-icon"><img src="../assets/images/trem_icone.png" alt="Trem" class="icon-img"
+        style="width:52px;height:52px;"></div>
 
-  <h2>Vai de Trem</h2>
-  <div class="sub">Acesso ao sistema</div>
+    <h2>Vai de Trem</h2>
+    <div class="sub">Acesso ao sistema</div>
 
-  <?php if ($error): ?>
-    <div class="error-box"><?php echo htmlspecialchars($error); ?></div>
-  <?php endif; ?>
+    <?php if ($error): ?>
+      <div class="error-box"><?php echo htmlspecialchars($error); ?></div>
+    <?php endif; ?>
 
-  <div class="tab-switch">
-    <button type="button" id="tab-cliente" class="tab-btn active" onclick="showTab('cliente')">Cliente</button>
-    <a href="login_admin.php" target="_blank" id="tab-usuario" class="tab-btn">Usuário/Admin</a>
+    <div class="tab-switch">
+      <button type="button" id="tab-cliente" class="tab-btn active" onclick="showTab('cliente')">Cliente</button>
+      <a href="login_admin.php" target="_blank" id="tab-usuario" class="tab-btn">Usuário/Admin</a>
+    </div>
+
+    <!-- Form CLIENTE -->
+    <form id="form-cliente" method="post">
+      <input type="hidden" name="login_type" value="cliente">
+
+      <label>Email</label>
+      <input class="input" type="email" name="email" placeholder="cliente@vaidetrem.com" required>
+
+      <label style="margin-top:12px">Senha</label>
+      <input class="input" type="password" name="password" placeholder="Sua senha" required>
+
+      <button class="btn-login" type="submit">Entrar</button>
+
+      <p class="auth-note">
+        Não tem conta? <a href="registrar_se.php">Registrar-se</a>
+      </p>
+    </form>
+
   </div>
 
-  <!-- Form CLIENTE -->
-  <form id="form-cliente" method="post">
-    <input type="hidden" name="login_type" value="cliente">
-
-    <label>Email</label>
-    <input class="input" type="email" name="email" placeholder="cliente@vaidetrem.com" required>
-
-    <label style="margin-top:12px">Senha</label>
-    <input class="input" type="password" name="password" placeholder="Sua senha" required>
-
-    <button class="btn-login" type="submit">Entrar</button>
-
-    <p class="auth-note">
-      Não tem conta? <a href="registrar_se.php">Registrar-se</a>
-    </p>
-  </form>
-
-</div>
-
-<script>
-function showTab(type){
-  document.getElementById('form-cliente').style.display = 'block';
-  document.getElementById('tab-cliente').classList.add('active');
-  document.getElementById('tab-usuario').classList.remove('active');
-}
-</script>
+  <script>
+    function showTab(type) {
+      document.getElementById('form-cliente').style.display = 'block';
+      document.getElementById('tab-cliente').classList.add('active');
+      document.getElementById('tab-usuario').classList.remove('active');
+    }
+  </script>
 
 </body>
+
 </html>
