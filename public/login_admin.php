@@ -60,6 +60,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <label style="margin-top:12px;">Senha</label>
       <input class="input" type="password" name="password" placeholder="Senha" required>
+      <div style="text-align:right;margin-top:6px;font-size:13px;">
+        <a href="esqueci_senha.php">Esqueci minha senha</a>
+      </div>
 
       <button class="btn-login" type="submit">Entrar</button>
     </form>
