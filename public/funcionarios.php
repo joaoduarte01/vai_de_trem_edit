@@ -29,13 +29,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
         $fname = 'f_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
         $dest = '../assets/uploads/funcionarios/' . $fname;
+        
+        // Garantir que a pasta existe
+        $dir = dirname($dest);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+
         if (move_uploaded_file($_FILES['photo']['tmp_name'], $dest)) {
-            $photo = $fname; // Salva apenas o nome do arquivo
+            $photo = $fname;
         }
     } 
     // 2. Verifica se selecionou da galeria (se não houve upload)
     elseif (!empty($_POST['selected_photo'])) {
-        $photo = $_POST['selected_photo']; // Espera-se "assets/images/funcionarioX.png"
+        $photo = $_POST['selected_photo'];
     }
 
     if ($action === 'create') {
