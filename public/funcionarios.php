@@ -4,265 +4,457 @@ require_once('../assets/config/db.php');
 
 $feedback = "";
 
-/* AÇÕES: CADASTRAR, EDITAR, EXCLUIR */
-$action = $_GET['action'] ?? '';
-$edit_id = $_GET['edit'] ?? null;
-$del_id = $_GET['delete'] ?? null;
-
-// EXCLUIR
-if ($del_id) {
-  $stmt = $mysqli->prepare("DELETE FROM employees WHERE id = ?");
-  $stmt->bind_param('i', $del_id);
-  if ($stmt->execute()) {
-    $feedback = "Funcionário excluído com sucesso!";
-  }
-  $stmt->close();
-}
-
-// EDITAR (Carregar dados)
-$edit_data = null;
-if ($edit_id) {
-  $stmt = $mysqli->prepare("SELECT * FROM employees WHERE id = ?");
-  $stmt->bind_param('i', $edit_id);
-  $stmt->execute();
-  $res = $stmt->get_result();
-  $edit_data = $res->fetch_assoc();
-  $stmt->close();
-}
-
-// POST (Cadastrar ou Atualizar)
+// PROCESSAR FORMULÁRIO
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-  $id = $_POST['id'] ?? '';
-  $name = trim($_POST['name'] ?? '');
-  $role = trim($_POST['role'] ?? '');
-  $cep = trim($_POST['cep'] ?? '');
-  $street = trim($_POST['street'] ?? '');
-  $neigh = trim($_POST['neighborhood'] ?? '');
-  $city = trim($_POST['city'] ?? '');
-  $uf = trim($_POST['uf'] ?? '');
-  
-  // LOGIN ADMIN (Apenas no cadastro)
-  $email = trim($_POST['email'] ?? '');
-  $password = trim($_POST['password'] ?? '');
-
-  // FOTO
-  $photo = null;
-  if (!empty($_FILES['photo']['name'])) {
-    $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
-    $fname = 'f_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-    $dest = '../assets/uploads/funcionarios/' . $fname;
-
-    if (move_uploaded_file($_FILES['photo']['tmp_name'], $dest)) {
-      $photo = $fname;
-    }
-  }
-
-  if ($id) {
-    // ATUALIZAR
-    $sql = "UPDATE employees SET name=?, role=?, cep=?, street=?, neighborhood=?, city=?, uf=?";
-    $params = [$name, $role, $cep, $street, $neigh, $city, $uf];
-    $types = "sssssss";
-
-    if ($photo) {
-      $sql .= ", photo=?";
-      $params[] = $photo;
-      $types .= "s";
-    }
-
-    $sql .= " WHERE id=?";
-    $params[] = $id;
-    $types .= "i";
-
-    $stmt = $mysqli->prepare($sql);
-    $stmt->bind_param($types, ...$params);
+    $action = $_POST['action'] ?? '';
+    $id = $_POST['id'] ?? '';
     
-    if ($stmt->execute()) {
-      $feedback = "Funcionário atualizado com sucesso!";
-      $edit_data = null; 
-      // header("Location: funcionarios.php"); exit;
+    $name = trim($_POST['name'] ?? '');
+    $role = trim($_POST['role'] ?? '');
+    $cep = trim($_POST['cep'] ?? '');
+    $street = trim($_POST['street'] ?? '');
+    $neighborhood = trim($_POST['neighborhood'] ?? '');
+    $city = trim($_POST['city'] ?? '');
+    $uf = trim($_POST['uf'] ?? '');
+    
+    // Apenas para criação
+    $email = trim($_POST['email'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+
+    // FOTO
+    $photo = null;
+    
+    // 1. Verifica se veio upload
+    if (!empty($_FILES['photo']['name'])) {
+        $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
+        $fname = 'f_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+        $dest = '../assets/uploads/funcionarios/' . $fname;
+        if (move_uploaded_file($_FILES['photo']['tmp_name'], $dest)) {
+            $photo = $fname; // Salva apenas o nome do arquivo
+        }
+    } 
+    // 2. Verifica se selecionou da galeria (se não houve upload)
+    elseif (!empty($_POST['selected_photo'])) {
+        $photo = $_POST['selected_photo']; // Espera-se "assets/images/funcionarioX.png"
     }
-    $stmt->close();
 
-  } else {
-    // CADASTRAR
-    if ($name && $role && $email && $password) {
-      $hash = password_hash($password, PASSWORD_DEFAULT);
+    if ($action === 'create') {
+        // 1. Inserir Funcionário
+        $stmt = $mysqli->prepare("INSERT INTO employees (name, role, cep, street, neighborhood, city, uf, photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param('ssssssss', $name, $role, $cep, $street, $neighborhood, $city, $uf, $photo);
+        
+        if ($stmt->execute()) {
+            // 2. Criar Usuário de Acesso (apenas se email/senha fornecidos)
+            if ($email && $password) {
+                $hash = password_hash($password, PASSWORD_DEFAULT);
+                $stmt2 = $mysqli->prepare("INSERT INTO users (name, email, password, role, avatar) VALUES (?, ?, ?, 'admin', ?)");
+                $stmt2->bind_param('ssss', $name, $email, $hash, $photo);
+                $stmt2->execute();
+            }
+            $feedback = "Funcionário cadastrado com sucesso!";
+        } else {
+            $feedback = "Erro ao cadastrar funcionário.";
+        }
+        
+    } elseif ($action === 'update' && $id) {
+        // Construir query dinâmica para update
+        $sql = "UPDATE employees SET name=?, role=?, cep=?, street=?, neighborhood=?, city=?, uf=?";
+        $params = [$name, $role, $cep, $street, $neighborhood, $city, $uf];
+        $types = "sssssss";
 
-      /* 1 — INSERIR NA TABELA EMPLOYEES */
-      $stmt = $mysqli->prepare("
-        INSERT INTO employees (name, role, cep, street, neighborhood, city, uf, photo)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      ");
-      $stmt->bind_param(
-        'ssssssss',
-        $name,
-        $role,
-        $cep,
-        $street,
-        $neigh,
-        $city,
-        $uf,
-        $photo
-      );
-      $stmt->execute();
-      $stmt->close();
+        if ($photo) {
+            $sql .= ", photo=?";
+            $params[] = $photo;
+            $types .= "s";
+        }
 
-      /* 2 — CRIAR LOGIN ADMIN */
-      $stmt2 = $mysqli->prepare("
-        INSERT INTO users (name, email, password, role, avatar)
-        VALUES (?, ?, ?, 'admin', ?)
-      ");
-      $stmt2->bind_param('ssss', $name, $email, $hash, $photo);
-      $stmt2->execute();
-      $stmt2->close();
+        $sql .= " WHERE id=?";
+        $params[] = $id;
+        $types .= "i";
 
-      $feedback = "Funcionário cadastrado e login admin criado!";
+        $stmt = $mysqli->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        
+        if ($stmt->execute()) {
+            $feedback = "Funcionário atualizado com sucesso!";
+        } else {
+            $feedback = "Erro ao atualizar funcionário.";
+        }
+
+    } elseif ($action === 'delete' && $id) {
+        $stmt = $mysqli->prepare("DELETE FROM employees WHERE id=?");
+        $stmt->bind_param('i', $id);
+        if ($stmt->execute()) {
+            $feedback = "Funcionário excluído com sucesso!";
+        }
     }
-  }
 }
 
-$employees = $mysqli->query("SELECT * FROM employees ORDER BY id DESC");
-
+// DELETE VIA GET
+if (isset($_GET['delete'])) {
+    $id = (int)$_GET['delete'];
+    $mysqli->query("DELETE FROM employees WHERE id=$id");
+    header('Location: funcionarios.php');
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Funcionários - Vai de Trem</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Funcionários - Vai de Trem</title>
 
-  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
-  <link href="../assets/css/styles.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="../assets/css/styles.css" rel="stylesheet">
 
-  <script>
-    async function buscarCEP() {
-      const cep = document.getElementById("cep").value.replace(/\D/g, '');
+    <style>
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .gallery-item {
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: 50%;
+            padding: 2px;
+            transition: all 0.2s;
+        }
+        .gallery-item:hover {
+            transform: scale(1.1);
+        }
+        .gallery-item.selected {
+            border-color: var(--brand);
+            transform: scale(1.1);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 50%;
+            display: block;
+        }
+    </style>
 
-      if (cep.length !== 8) {
-        alert("CEP inválido! Digite 8 números.");
-        return;
-      }
+    <script>
+        async function buscarCEP() {
+            const cep = document.getElementById("empCep").value.replace(/\D/g, '');
+            if (cep.length !== 8) {
+                alert("CEP inválido! Digite 8 números.");
+                return;
+            }
 
-      const url = `https://viacep.com.br/ws/${cep}/json/`;
-      const data = await fetch(url).then(r => r.json());
-
-      if (data.erro) {
-        alert("CEP não encontrado.");
-        return;
-      }
-
-      // Preenche os campos
-      document.getElementById("street").value = data.logradouro;
-      document.getElementById("neighborhood").value = data.bairro;
-      document.getElementById("city").value = data.localidade;
-      document.getElementById("uf").value = data.uf;
-
-      // Efeito visual de confirmado
-      flashFields();
-    }
-
-    function flashFields() {
-      const fields = ["street", "neighborhood", "city", "uf"];
-      fields.forEach(id => {
-        const el = document.getElementById(id);
-        el.style.borderColor = "#000"; // visual indicator
-        setTimeout(() => el.style.borderColor = "", 800);
-      });
-    }
-  </script>
-
-
+            const url = `https://viacep.com.br/ws/${cep}/json/`;
+            try {
+                const data = await fetch(url).then(r => r.json());
+                if (data.erro) {
+                    alert("CEP não encontrado.");
+                    return;
+                }
+                document.getElementById("empStreet").value = data.logradouro;
+                document.getElementById("empNeighborhood").value = data.bairro;
+                document.getElementById("empCity").value = data.localidade;
+                document.getElementById("empUf").value = data.uf;
+            } catch (e) {
+                alert("Erro ao buscar CEP.");
+            }
+        }
+    </script>
 </head>
 
 <body>
 
-  <!-- HEADER -->
-  <div class="top-header">
-    <h1><img src="../assets/images/icones_funcionarios.png" alt="Funcionários" class="icon-img"
-        style="width:22px;height:22px;"> Funcionários</h1>
-  </div>
-
-  <!-- FEEDBACK -->
-  <?php if ($feedback): ?>
-    <div class="badge" style="margin:20px;font-size:14px;"><?php echo $feedback; ?></div>
-  <?php endif; ?>
-
-  <!-- FORM -->
-  <div class="form-card">
-
-    <h2><?php echo $edit_data ? 'Editar Funcionário' : 'Cadastrar Funcionário'; ?></h2>
-
-    <form method="post" enctype="multipart/form-data">
-      
-      <?php if ($edit_data): ?>
-        <input type="hidden" name="id" value="<?php echo $edit_data['id']; ?>">
-      <?php endif; ?>
-
-      <img id="preview" class="photo-preview" src="<?php echo ($edit_data && $edit_data['photo']) 
-        ? '../assets/uploads/funcionarios/' . $edit_data['photo'] 
-        : '../assets/uploads/profile_photos/avatar-default.png'; ?>">
-
-      <input type="file" name="photo" accept="image/*" class="input"
-        onchange="preview.src = window.URL.createObjectURL(this.files[0])">
-
-      <input class="input" name="name" placeholder="Nome completo" required value="<?php echo $edit_data['name'] ?? ''; ?>">
-      <input class="input" name="role" placeholder="Cargo no sistema" required value="<?php echo $edit_data['role'] ?? ''; ?>">
-
-      <?php if (!$edit_data): ?>
-        <input class="input" name="email" type="email" placeholder="E-mail de login" required>
-        <input class="input" name="password" type="password" placeholder="Senha de acesso" required>
-      <?php else: ?>
-        <p style="font-size:12px; color:#666; margin-bottom:10px;">* Login e senha não podem ser alterados por aqui.</p>
-      <?php endif; ?>
-
-      <input class="input" id="cep" name="cep" placeholder="CEP" onblur="buscarCEP()" value="<?php echo $edit_data['cep'] ?? ''; ?>">
-      <div style="display:flex; gap:10px; align-items:center;">
-        <button type="button" class="btn" onclick="buscarCEP()" style="padding:10px 14px;">
-          Verificar
-        </button>
-      </div>
-
-      <input class="input" id="city" name="city" placeholder="Cidade" value="<?php echo $edit_data['city'] ?? ''; ?>">
-      <input class="input" id="uf" name="uf" placeholder="UF" value="<?php echo $edit_data['uf'] ?? ''; ?>">
-      <input class="input" id="street" name="street" placeholder="Rua" value="<?php echo $edit_data['street'] ?? ''; ?>">
-      <input class="input" id="neighborhood" name="neighborhood" placeholder="Bairro" value="<?php echo $edit_data['neighborhood'] ?? ''; ?>">
-
-      <button class="btn-save"><?php echo $edit_data ? 'Atualizar' : 'Salvar Funcionário'; ?></button>
-      
-      <?php if ($edit_data): ?>
-        <a href="funcionarios.php" class="btn secondary" style="margin-top:10px; display:block; text-align:center;">Cancelar</a>
-      <?php endif; ?>
-
-    </form>
-
-  </div>
-
-  <!-- LISTA -->
-  <?php while ($f = $employees->fetch_assoc()): ?>
-    <div class="employee-card">
-      <img src="<?php echo $f['photo']
-        ? '../assets/uploads/funcionarios/' . $f['photo']
-        : '../assets/uploads/profile_photos/avatar-default.png'; ?>">
-
-      <div style="flex:1;">
-        <strong><?php echo htmlspecialchars($f['name']); ?></strong><br>
-        <small><?php echo htmlspecialchars($f['role']); ?></small><br>
-        <small><img src="../assets/images/local_icone.png" alt="Local" class="icon-img" style="width:14px;height:14px;">
-          <?php echo $f['city'] . " - " . $f['uf']; ?></small>
-      </div>
-      
-      <div style="display:flex; flex-direction:column; gap:6px;">
-        <a href="?edit=<?php echo $f['id']; ?>" class="btn secondary" style="padding:6px 10px; font-size:12px;">Editar</a>
-        <a href="?delete=<?php echo $f['id']; ?>" class="btn" style="padding:6px 10px; font-size:12px; background:#ef4444; border-color:#dc2626;" onclick="return confirm('Tem certeza que deseja excluir?');">Excluir</a>
-      </div>
+    <!-- HEADER -->
+    <div class="top-header">
+        <h1><img src="../assets/images/icones_funcionarios.png" alt="Funcionários" class="icon-img" style="width:22px;height:22px;">
+            Funcionários</h1>
     </div>
-  <?php endwhile; ?>
 
-  <!-- NAV -->
-  <?php include '_partials/bottom_nav.php'; ?>
+    <!-- LISTA DE FUNCIONÁRIOS -->
+    <div class="container" style="padding-bottom: 80px;">
+        
+        <?php if ($feedback): ?>
+            <div class="success-box"><?php echo $feedback; ?></div>
+        <?php endif; ?>
 
+        <div class="routes-grid">
+            <?php
+            $res = $mysqli->query("SELECT * FROM employees ORDER BY id DESC");
+            while ($f = $res->fetch_assoc()) {
+                // Lógica de exibição da foto:
+                // 1. Se começar com "assets/", é caminho relativo direto (galeria)
+                // 2. Se não, assume que está em uploads/funcionarios/
+                // 3. Fallback
+                
+                $photoVal = $f['photo'];
+                if ($photoVal && strpos($photoVal, 'assets/') === 0) {
+                    $photoPath = '../' . $photoVal; // Ajuste pois estamos em public/
+                } elseif ($photoVal) {
+                    $photoPath = '../assets/uploads/funcionarios/' . $photoVal;
+                } else {
+                    $photoPath = '../assets/uploads/profile_photos/avatar-default.png';
+                }
+                
+                // Dados para JS
+                $jsonData = htmlspecialchars(json_encode($f), ENT_QUOTES, 'UTF-8');
+
+                echo "
+                <div class='route-card' onclick='editEmployee($jsonData)'>
+                    <div style='display:flex; gap:15px; align-items:center;'>
+                        <img src='$photoPath' style='width:60px; height:60px; border-radius:50%; object-fit:cover; border:1px solid #eee;'>
+                        <div>
+                            <div class='route-title' style='margin-bottom:4px;'>" . htmlspecialchars($f['name']) . "</div>
+                            <div style='font-size:13px; color:var(--muted);'>" . htmlspecialchars($f['role']) . "</div>
+                        </div>
+                    </div>
+                    
+                    <div class='details' style='margin-top:15px;'>
+                        <img src='../assets/images/local_icone.png' class='icon-img' style='width:16px;height:16px;'> " . htmlspecialchars($f['city']) . " - " . htmlspecialchars($f['uf']) . "
+                    </div>
+                </div>";
+            }
+            ?>
+        </div>
+    </div>
+
+    <!-- BOTÃO "+" (FAB) -->
+    <div class="fab" onclick="openCreateModal()">
+        <i class="ri-add-line" style="font-size: 32px;"></i>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-bg" id="modal">
+        <div class="modal" onclick="event.stopPropagation()" style="max-height:90vh; overflow-y:auto;">
+            <h2 id="modalTitle">Novo Funcionário</h2>
+            <form method="post" enctype="multipart/form-data">
+                <input type="hidden" name="action" id="formAction" value="create">
+                <input type="hidden" name="id" id="empId">
+                <input type="hidden" name="selected_photo" id="selectedPhoto">
+
+                <!-- Foto -->
+                <div style="text-align:center; margin-bottom:15px;">
+                    <img id="preview" src="../assets/uploads/profile_photos/avatar-default.png" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:1px solid #ddd; margin-bottom:10px;">
+                    <br>
+                    
+                    <!-- Opções de Foto -->
+                    <div style="margin-bottom:10px;">
+                        <span style="font-size:13px; color:var(--muted); display:block; margin-bottom:5px;">Escolha um avatar:</span>
+                        <div class="gallery-grid">
+                            <div class="gallery-item" onclick="selectGalleryPhoto('assets/images/funcionario1.png', this)">
+                                <img src="../assets/images/funcionario1.png">
+                            </div>
+                            <div class="gallery-item" onclick="selectGalleryPhoto('assets/images/funcionario2.png', this)">
+                                <img src="../assets/images/funcionario2.png">
+                            </div>
+                            <div class="gallery-item" onclick="selectGalleryPhoto('assets/images/funcionario3.png', this)">
+                                <img src="../assets/images/funcionario3.png">
+                            </div>
+                            <div class="gallery-item" onclick="selectGalleryPhoto('assets/images/funcionario4.png', this)">
+                                <img src="../assets/images/funcionario4.png">
+                            </div>
+                            <div class="gallery-item" onclick="selectGalleryPhoto('assets/images/funcionario5.png', this)">
+                                <img src="../assets/images/funcionario5.png">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="font-size:12px; color:var(--muted); margin:10px 0;">OU</div>
+
+                    <label for="photoInput" class="btn secondary" style="display:inline-block; width:auto; padding:5px 10px; font-size:12px;">Upload do Computador</label>
+                    <input type="file" name="photo" id="photoInput" accept="image/*" style="display:none;" onchange="handleFileUpload(this)">
+                </div>
+
+                <label>Nome Completo</label>
+                <input class="input" name="name" id="empName" required>
+
+                <label>Cargo</label>
+                <input class="input" name="role" id="empRole" required>
+
+                <!-- Campos de Login (Apenas Create) -->
+                <div id="loginFields">
+                    <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
+                    <p style="font-size:13px; font-weight:600; margin-bottom:10px; color:var(--brand);">Dados de Acesso (Opcional)</p>
+                    <label>E-mail</label>
+                    <input class="input" name="email" id="empEmail" type="email">
+                    <label>Senha</label>
+                    <input class="input" name="password" id="empPassword" type="password">
+                </div>
+
+                <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
+                
+                <!-- Endereço -->
+                <div style="display:flex; gap:10px; align-items:flex-end;">
+                    <div style="flex:1;">
+                        <label>CEP</label>
+                        <input class="input" name="cep" id="empCep" onblur="buscarCEP()">
+                    </div>
+                    <button type="button" class="btn" onclick="buscarCEP()" style="width:auto; margin-bottom:2px;"><i class="ri-search-line"></i></button>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <div style="flex:2;">
+                        <label>Cidade</label>
+                        <input class="input" name="city" id="empCity">
+                    </div>
+                    <div style="flex:1;">
+                        <label>UF</label>
+                        <input class="input" name="uf" id="empUf">
+                    </div>
+                </div>
+
+                <div style="margin-top:10px;">
+                    <label>Rua</label>
+                    <input class="input" name="street" id="empStreet">
+                </div>
+
+                <div style="margin-top:10px;">
+                    <label>Bairro</label>
+                    <input class="input" name="neighborhood" id="empNeighborhood">
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn">Salvar</button>
+                </div>
+                
+                <div id="deleteBtnContainer" style="margin-top:10px; text-align:center; display:none;">
+                    <a href="#" id="deleteLink" class="btn" style="background:#fee2e2; color:#991b1b; border-color:#fca5a5;">Excluir Funcionário</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const modalBg = document.getElementById("modal");
+        const modalTitle = document.getElementById("modalTitle");
+        const formAction = document.getElementById("formAction");
+        const empId = document.getElementById("empId");
+        const empName = document.getElementById("empName");
+        const empRole = document.getElementById("empRole");
+        const loginFields = document.getElementById("loginFields");
+        
+        const empCep = document.getElementById("empCep");
+        const empCity = document.getElementById("empCity");
+        const empUf = document.getElementById("empUf");
+        const empStreet = document.getElementById("empStreet");
+        const empNeighborhood = document.getElementById("empNeighborhood");
+        const preview = document.getElementById("preview");
+        const selectedPhotoInput = document.getElementById("selectedPhoto");
+        const photoInput = document.getElementById("photoInput");
+        
+        const deleteBtnContainer = document.getElementById("deleteBtnContainer");
+        const deleteLink = document.getElementById("deleteLink");
+
+        function selectGalleryPhoto(path, element) {
+            // Atualiza preview
+            preview.src = "../" + path;
+            // Define valor no input hidden
+            selectedPhotoInput.value = path;
+            // Limpa input file
+            photoInput.value = "";
+            
+            // Visual selection
+            document.querySelectorAll('.gallery-item').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function handleFileUpload(input) {
+            if (input.files && input.files[0]) {
+                preview.src = window.URL.createObjectURL(input.files[0]);
+                // Limpa seleção da galeria
+                selectedPhotoInput.value = "";
+                document.querySelectorAll('.gallery-item').forEach(el => el.classList.remove('selected'));
+            }
+        }
+
+        function openCreateModal() {
+            modalTitle.textContent = "Novo Funcionário";
+            formAction.value = "create";
+            empId.value = "";
+            empName.value = "";
+            empRole.value = "";
+            
+            // Limpar endereço
+            empCep.value = "";
+            empCity.value = "";
+            empUf.value = "";
+            empStreet.value = "";
+            empNeighborhood.value = "";
+            
+            // Resetar foto
+            preview.src = "../assets/uploads/profile_photos/avatar-default.png";
+            selectedPhotoInput.value = "";
+            photoInput.value = "";
+            document.querySelectorAll('.gallery-item').forEach(el => el.classList.remove('selected'));
+            
+            // Mostrar campos de login
+            loginFields.style.display = "block";
+            
+            deleteBtnContainer.style.display = "none";
+            modalBg.style.display = "flex";
+        }
+
+        function editEmployee(data) {
+            modalTitle.textContent = "Editar Funcionário";
+            formAction.value = "update";
+            empId.value = data.id;
+            empName.value = data.name;
+            empRole.value = data.role;
+            
+            empCep.value = data.cep || "";
+            empCity.value = data.city || "";
+            empUf.value = data.uf || "";
+            empStreet.value = data.street || "";
+            empNeighborhood.value = data.neighborhood || "";
+            
+            // Foto
+            selectedPhotoInput.value = "";
+            photoInput.value = "";
+            document.querySelectorAll('.gallery-item').forEach(el => el.classList.remove('selected'));
+
+            if (data.photo) {
+                if (data.photo.startsWith('assets/')) {
+                     preview.src = "../" + data.photo;
+                     // Tenta marcar na galeria se for um dos padrões
+                     const galleryItem = document.querySelector(`.gallery-item[onclick*='${data.photo}']`);
+                     if (galleryItem) galleryItem.classList.add('selected');
+                     selectedPhotoInput.value = data.photo;
+                } else {
+                     preview.src = "../assets/uploads/funcionarios/" + data.photo;
+                }
+            } else {
+                preview.src = "../assets/uploads/profile_photos/avatar-default.png";
+            }
+
+            // Esconder campos de login
+            loginFields.style.display = "none";
+
+            // Configurar botão de excluir
+            deleteLink.href = "?delete=" + data.id;
+            deleteLink.onclick = function(e) {
+                if(!confirm('Tem certeza que deseja excluir este funcionário?')) {
+                    e.preventDefault();
+                }
+            };
+            deleteBtnContainer.style.display = "block";
+
+            modalBg.style.display = "flex";
+        }
+
+        function closeModal() {
+            modalBg.style.display = "none";
+        }
+
+        window.addEventListener("click", function (e) {
+            if (e.target === modalBg) {
+                closeModal();
+            }
+        });
+    </script>
+
+    <?php include '_partials/bottom_nav.php'; ?>
 
 </body>
 
