@@ -20,24 +20,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Apenas para criação
     $email = trim($_POST['email'] ?? '');
     $password = trim($_POST['password'] ?? '');
+    $access_level = trim($_POST['access_level'] ?? 'user');
 
     // FOTO
     $photo = null;
     
     // 1. Verifica se veio upload
     if (!empty($_FILES['photo']['name'])) {
-        $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
-        $fname = 'f_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-        $dest = '../assets/uploads/funcionarios/' . $fname;
-        
-        // Garantir que a pasta existe
-        $dir = dirname($dest);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
-        }
+        if ($_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+            $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
+            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            
+            if (in_array($ext, $allowed)) {
+                $fname = 'f_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+                $dest = '../assets/uploads/funcionarios/' . $fname;
+                
+                // Garantir que a pasta existe
+                $dir = dirname($dest);
+                if (!is_dir($dir)) {
+                    mkdir($dir, 0777, true);
+                }
 
-        if (move_uploaded_file($_FILES['photo']['tmp_name'], $dest)) {
-            $photo = $fname;
+                if (move_uploaded_file($_FILES['photo']['tmp_name'], $dest)) {
+                    $photo = $fname;
+                } else {
+                    $feedback = "Erro ao mover arquivo de upload.";
+                }
+            } else {
+                $feedback = "Formato de imagem inválido. Use JPG, PNG, GIF ou WEBP.";
+            }
+        } else {
+            $feedback = "Erro no upload: Código " . $_FILES['photo']['error'];
         }
     } 
     // 2. Verifica se selecionou da galeria (se não houve upload)
@@ -45,25 +58,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $photo = $_POST['selected_photo'];
     }
 
-        
     if ($action === 'create') {
-        // 1. Inserir Funcionário
-        $stmt = $mysqli->prepare("INSERT INTO employees (name, role, cep, street, neighborhood, city, uf, photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param('ssssssss', $name, $role, $cep, $street, $neighborhood, $city, $uf, $photo);
-        
-        if ($stmt->execute()) {
-            // 2. Criar Usuário de Acesso (apenas se email/senha fornecidos)
-            if ($email && $password) {
-                $hash = password_hash($password, PASSWORD_DEFAULT);
-                // Mapeando: role (employees) -> job_title (users)
-                // O campo 'role' na tabela users é o nível de acesso (admin/user)
-                $stmt2 = $mysqli->prepare("INSERT INTO users (name, email, password, role, avatar, job_title) VALUES (?, ?, ?, 'admin', ?, ?)");
-                $stmt2->bind_param('sssss', $name, $email, $hash, $photo, $role);
-                $stmt2->execute();
-            }
-            $feedback = "Funcionário cadastrado com sucesso!";
+        // Validação de campos obrigatórios para login
+        if (empty($email) || empty($password)) {
+            $feedback = "Erro: E-mail e Senha são obrigatórios para novos funcionários.";
         } else {
-            $feedback = "Erro ao cadastrar funcionário.";
+            // 1. Inserir Funcionário
+            $stmt = $mysqli->prepare("INSERT INTO employees (name, role, cep, street, neighborhood, city, uf, photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param('ssssssss', $name, $role, $cep, $street, $neighborhood, $city, $uf, $photo);
+            
+            if ($stmt->execute()) {
+                // 2. Criar Usuário de Acesso (Obrigatório)
+                $hash = password_hash($password, PASSWORD_DEFAULT);
+                $stmt2 = $mysqli->prepare("INSERT INTO users (name, email, password, role, avatar, job_title) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt2->bind_param('ssssss', $name, $email, $hash, $access_level, $photo, $role);
+                
+                if ($stmt2->execute()) {
+                    $feedback = "Funcionário e usuário de acesso cadastrados com sucesso!";
+                } else {
+                    $feedback = "Funcionário criado, mas erro ao criar usuário de acesso (E-mail já existe?).";
+                }
+            } else {
+                $feedback = "Erro ao cadastrar funcionário.";
+            }
         }
         
     } elseif ($action === 'update' && $id) {
@@ -282,14 +299,21 @@ if (isset($_GET['delete'])) {
                 <label>Cargo</label>
                 <input class="input" name="role" id="empRole" required>
 
-                <!-- Campos de Login (Apenas Create) -->
+                <!-- Campos de Login (Obrigatório para criação) -->
                 <div id="loginFields">
                     <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
-                    <p style="font-size:13px; font-weight:600; margin-bottom:10px; color:var(--brand);">Dados de Acesso (Opcional)</p>
+                    <p style="font-size:13px; font-weight:600; margin-bottom:10px; color:var(--brand);">Dados de Acesso (Obrigatório)</p>
+                    
+                    <label>Nível de Acesso</label>
+                    <select class="input" name="access_level" id="empAccessLevel">
+                        <option value="user">Usuário Comum</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+
                     <label>E-mail</label>
-                    <input class="input" name="email" id="empEmail" type="email">
+                    <input class="input" name="email" id="empEmail" type="email" required>
                     <label>Senha</label>
-                    <input class="input" name="password" id="empPassword" type="password">
+                    <input class="input" name="password" id="empPassword" type="password" required>
                 </div>
 
                 <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
