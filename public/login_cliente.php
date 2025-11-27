@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $pass = $_POST['password'] ?? '';
 
   if ($email && $pass) {
-    $stmt = $mysqli->prepare("SELECT id, name, email, password, role FROM users WHERE email=? LIMIT 1");
+    $stmt = $mysqli->prepare("SELECT id, name, email, password, role, avatar FROM users WHERE email=? LIMIT 1");
     $stmt->bind_param('s', $email);
     $stmt->execute();
     $res = $stmt->get_result();

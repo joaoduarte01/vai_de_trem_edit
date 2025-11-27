@@ -3,8 +3,10 @@ require_once('../assets/config/auth.php');
 require_once('../assets/config/db.php');
 
 // Helper para formatar duração
-function formatDuration($minutes) {
-    if (!$minutes) return '0min';
+function formatDuration($minutes)
+{
+    if (!$minutes)
+        return '0min';
     $hours = floor($minutes / 60);
     $mins = $minutes % 60;
     if ($hours > 0) {
@@ -17,14 +19,14 @@ function formatDuration($minutes) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $id = $_POST['id'] ?? '';
-    
+
     // Novos campos
     $origin = trim($_POST['origin'] ?? '');
     $destination = trim($_POST['destination'] ?? '');
-    
+
     // Duração agora vem em horas e minutos
-    $hours = (int)($_POST['duration_hours'] ?? 0);
-    $minutes = (int)($_POST['duration_minutes'] ?? 0);
+    $hours = (int) ($_POST['duration_hours'] ?? 0);
+    $minutes = (int) ($_POST['duration_minutes'] ?? 0);
     $duration_minutes = ($hours * 60) + $minutes;
 
     // Nome da rota é composto
@@ -54,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // DELETE VIA GET
 if (isset($_GET['delete'])) {
-    $id = (int)$_GET['delete'];
+    $id = (int) $_GET['delete'];
     $mysqli->query("DELETE FROM routes WHERE id=$id");
     header('Location: rotas.php');
     exit;
@@ -90,10 +92,10 @@ if (isset($_GET['delete'])) {
             $badgeClass = ($r['status'] === 'manutencao') ? 'red' : 'blue';
             $badgeText = ($r['status'] === 'manutencao') ? 'Manutenção' : 'Ativa';
             $durationFmt = formatDuration($r['duration_minutes']);
-            
+
             // Prepara dados para o JS
             $jsonData = htmlspecialchars(json_encode($r), ENT_QUOTES, 'UTF-8');
-            
+
             echo "
             <div class='route-card' onclick='editRoute($jsonData)'>
                 <div class='route-title'>" . htmlspecialchars($r['name']) . "</div>
@@ -105,7 +107,7 @@ if (isset($_GET['delete'])) {
                 </div>
 
                 <div class='live-info'>
-                    <img src='../assets/images/notificacao_icone.png' class='icon-img' style='width:16px;height:16px;'> " . ($r['extra_info'] ? htmlspecialchars($r['extra_info']) : 'Sem informações adicionais') . "
+                    <img src='../assets/images/notificacao_icone.png' class='icon-img' style='width:16px;height:16px;'> " . (!empty($r['extra_info']) ? htmlspecialchars($r['extra_info']) : 'Sem informações adicionais') . "
                 </div>
             </div>";
         }
@@ -132,7 +134,8 @@ if (isset($_GET['delete'])) {
                     </div>
                     <div style="flex:1;">
                         <label>Destino</label>
-                        <input class="input" name="destination" id="routeDestination" placeholder="Ex: Rio de Janeiro" required>
+                        <input class="input" name="destination" id="routeDestination" placeholder="Ex: Rio de Janeiro"
+                            required>
                     </div>
                 </div>
 
@@ -142,11 +145,13 @@ if (isset($_GET['delete'])) {
                 <label>Duração</label>
                 <div style="display:flex; gap:10px; align-items:center;">
                     <div style="flex:1;">
-                        <input type="number" class="input" name="duration_hours" id="routeHours" placeholder="Horas" min="0" required>
+                        <input type="number" class="input" name="duration_hours" id="routeHours" placeholder="Horas"
+                            min="0" required>
                     </div>
                     <span>h</span>
                     <div style="flex:1;">
-                        <input type="number" class="input" name="duration_minutes" id="routeMinutes" placeholder="Minutos" min="0" max="59" required>
+                        <input type="number" class="input" name="duration_minutes" id="routeMinutes"
+                            placeholder="Minutos" min="0" max="59" required>
                     </div>
                     <span>min</span>
                 </div>
@@ -158,15 +163,17 @@ if (isset($_GET['delete'])) {
                 </select>
 
                 <label>Informações Adicionais</label>
-                <textarea class="textarea" name="extra_info" id="routeExtra" rows="2" placeholder="Ex: Atrasos, previsões..."></textarea>
+                <textarea class="textarea" name="extra_info" id="routeExtra" rows="2"
+                    placeholder="Ex: Atrasos, previsões..."></textarea>
 
                 <div style="display:flex; gap:10px; margin-top:15px;">
                     <button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>
                     <button type="submit" class="btn">Salvar</button>
                 </div>
-                
+
                 <div id="deleteBtnContainer" style="margin-top:10px; text-align:center; display:none;">
-                    <a href="#" id="deleteLink" class="btn" style="background:#fee2e2; color:#991b1b; border-color:#fca5a5;">Excluir Rota</a>
+                    <a href="#" id="deleteLink" class="btn"
+                        style="background:#fee2e2; color:#991b1b; border-color:#fca5a5;">Excluir Rota</a>
                 </div>
             </form>
         </div>
@@ -177,15 +184,15 @@ if (isset($_GET['delete'])) {
         const modalTitle = document.getElementById("modalTitle");
         const formAction = document.getElementById("formAction");
         const routeId = document.getElementById("routeId");
-        
+
         const routeOrigin = document.getElementById("routeOrigin");
         const routeDestination = document.getElementById("routeDestination");
-        
+
         const routeStops = document.getElementById("routeStops");
-        
+
         const routeHours = document.getElementById("routeHours");
         const routeMinutes = document.getElementById("routeMinutes");
-        
+
         const routeStatus = document.getElementById("routeStatus");
         const routeExtra = document.getElementById("routeExtra");
         const deleteBtnContainer = document.getElementById("deleteBtnContainer");
@@ -195,15 +202,15 @@ if (isset($_GET['delete'])) {
             modalTitle.textContent = "Nova Rota";
             formAction.value = "create";
             routeId.value = "";
-            
+
             routeOrigin.value = "";
             routeDestination.value = "";
-            
+
             routeStops.value = "";
-            
+
             routeHours.value = "";
             routeMinutes.value = "";
-            
+
             routeStatus.value = "ativa";
             routeExtra.value = "";
             deleteBtnContainer.style.display = "none";
@@ -214,7 +221,7 @@ if (isset($_GET['delete'])) {
             modalTitle.textContent = "Editar Rota";
             formAction.value = "update";
             routeId.value = data.id;
-            
+
             // Tenta usar os campos novos, se não existirem, tenta extrair do nome
             if (data.origin && data.destination) {
                 routeOrigin.value = data.origin;
@@ -232,12 +239,12 @@ if (isset($_GET['delete'])) {
             }
 
             routeStops.value = data.stops || "";
-            
+
             // Converter minutos para horas e minutos
             let totalMin = parseInt(data.duration_minutes) || 0;
             let h = Math.floor(totalMin / 60);
             let m = totalMin % 60;
-            
+
             routeHours.value = h;
             routeMinutes.value = m;
 
@@ -246,8 +253,8 @@ if (isset($_GET['delete'])) {
 
             // Configurar botão de excluir
             deleteLink.href = "?delete=" + data.id;
-            deleteLink.onclick = function(e) {
-                if(!confirm('Tem certeza que deseja excluir esta rota?')) {
+            deleteLink.onclick = function (e) {
+                if (!confirm('Tem certeza que deseja excluir esta rota?')) {
                     e.preventDefault();
                 }
             };

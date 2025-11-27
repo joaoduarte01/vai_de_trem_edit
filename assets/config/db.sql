@@ -31,8 +31,12 @@ CREATE TABLE IF NOT EXISTS stations (
 CREATE TABLE IF NOT EXISTS routes (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(200) NOT NULL,
-  status ENUM('ativa','manutencao') NOT NULL DEFAULT 'ativa',
+  origin VARCHAR(100),
+  destination VARCHAR(100),
+  stops TEXT,
   duration_minutes INT DEFAULT NULL,
+  extra_info TEXT,
+  status ENUM('ativa','manutencao') NOT NULL DEFAULT 'ativa',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -79,9 +83,9 @@ DELETE FROM users WHERE email IN ('admin@vaidetrem.com','cliente@vaidetrem.com')
 INSERT INTO users (name, email, password, role, avatar)
 VALUES
 ('Administrador', 'admin@vaidetrem.com',
-  '$2y$10$4uEvjaGCF3Zr7ZSeZb05EOB7JHnIB8uHQzOHcKyImNOf0UbH19V0S', 'admin', NULL),
+  '$2y$10$jXMvLkH8bsM1E7e8qcWjj.KVsSXNFxyCG3raoycw2O66OvtlCz9jO', 'admin', NULL),
 ('Cliente de Teste', 'cliente@vaidetrem.com',
-  '$2y$10$Q3nVsb09TLOE2RSkWnRQhO8Fj8AZqQTBSPi2nZJb3M2N6yS6Kzk3i', 'user', NULL);
+  '$2y$10$jXMvLkH8bsM1E7e8qcWjj.KVsSXNFxyCG3raoycw2O66OvtlCz9jO', 'user', NULL);
 
 INSERT IGNORE INTO stations (name, city, state, cep) VALUES
 ('Estação Central - Plataforma 1','São Paulo','SP','01001-000'),
@@ -92,11 +96,11 @@ INSERT IGNORE INTO stations (name, city, state, cep) VALUES
 ('Ponte Rio Grande','Sorocaba','SP','18010-000');
 
 
-INSERT IGNORE INTO routes (name, status, duration_minutes) VALUES
-('São Paulo → Rio de Janeiro','ativa',390),
-('Campinas → Santos','ativa',225),
-('Belo Horizonte → São Paulo','manutencao',495),
-('Curitiba → Florianópolis','ativa',320);
+INSERT IGNORE INTO routes (name, origin, destination, stops, duration_minutes, extra_info, status) VALUES
+('São Paulo → Rio de Janeiro', 'São Paulo', 'Rio de Janeiro', 'São José dos Campos, Aparecida, Resende', 390, 'Wi-Fi disponível', 'ativa'),
+('Campinas → Santos', 'Campinas', 'Santos', 'Jundiaí, São Paulo (Luz)', 225, NULL, 'ativa'),
+('Belo Horizonte → São Paulo', 'Belo Horizonte', 'São Paulo', 'Divinópolis, Varginha', 495, 'Manutenção na via', 'manutencao'),
+('Curitiba → Florianópolis', 'Curitiba', 'Florianópolis', 'Joinville, Itajaí', 320, 'Vista panorâmica', 'ativa');
 
 
 INSERT IGNORE INTO route_stations (route_id, station_id, stop_order) VALUES
@@ -157,8 +161,12 @@ CREATE TABLE stations (
 CREATE TABLE routes (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(200) NOT NULL,
-  status ENUM('ativa','manutencao') DEFAULT 'ativa',
+  origin VARCHAR(100),
+  destination VARCHAR(100),
+  stops TEXT,
   duration_minutes INT DEFAULT NULL,
+  extra_info TEXT,
+  status ENUM('ativa','manutencao') DEFAULT 'ativa',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -197,8 +205,8 @@ CREATE TABLE chat_messages (
 
 
 INSERT INTO users (name,email,password,role) VALUES
-('Administrador','admin@vaidetrem.com','$2y$10$4uEvjaGCF3Zr7ZSeZb05EOB7JHnIB8uHQzOHcKyImNOf0UbH19V0S','admin'),
-('Cliente de Teste','cliente@vaidetrem.com','$2y$10$Q3nVsb09TLOE2RSkWnRQhO8Fj8AZqQTBSPi2nZJb3M2N6yS6Kzk3i','user');
+('Administrador','admin@vaidetrem.com','$2y$10$jXMvLkH8bsM1E7e8qcWjj.KVsSXNFxyCG3raoycw2O66OvtlCz9jO','admin'),
+('Cliente de Teste','cliente@vaidetrem.com','$2y$10$jXMvLkH8bsM1E7e8qcWjj.KVsSXNFxyCG3raoycw2O66OvtlCz9jO','user');
 
 
 CREATE TABLE employees (
@@ -214,3 +222,21 @@ CREATE TABLE employees (
   photo VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+INSERT INTO employees (name, role, phone, cep, street, neighborhood, city, uf, photo) VALUES
+('Carlos Silva', 'Maquinista', '(11) 98765-4321', '01001-000', 'Rua das Flores, 123', 'Centro', 'São Paulo', 'SP', NULL),
+('Ana Souza', 'Agente de Estação', '(11) 91234-5678', '02002-000', 'Av. Paulista, 1000', 'Bela Vista', 'São Paulo', 'SP', NULL),
+('Roberto Oliveira', 'Segurança', '(21) 99876-5432', '20040-002', 'Rua do Ouvidor, 50', 'Centro', 'Rio de Janeiro', 'RJ', NULL),
+('Fernanda Lima', 'Atendente', '(31) 98765-1234', '30130-000', 'Av. Afonso Pena, 500', 'Centro', 'Belo Horizonte', 'MG', NULL),
+('João Pereira', 'Manutenção', '(41) 91234-8765', '80020-000', 'Rua XV de Novembro, 200', 'Centro', 'Curitiba', 'PR', NULL);
+
+INSERT INTO routes (name, origin, destination, stops, duration_minutes, extra_info, status) VALUES
+('Expresso Leste', 'São Paulo (Luz)', 'Guaianases', 'Tatuapé, Itaquera', 45, 'Alta demanda', 'ativa'),
+('Linha Turística da Serra', 'Campos do Jordão', 'Santo Antônio do Pinhal', 'Mirante', 120, 'Guia turístico incluso', 'manutencao'),
+('Intercidades Campinas-SP', 'Campinas', 'São Paulo (Barra Funda)', 'Jundiaí', 60, 'Serviço expresso', 'ativa'),
+('Conexão Aeroporto', 'São Paulo (Luz)', 'Aeroporto Guarulhos', 'Guarulhos-Cecap', 30, 'Saídas a cada 15min', 'ativa');
+
+INSERT INTO notices (title, body, tag) VALUES
+('Atrasos na Linha 1', 'Devido a chuvas fortes, a Linha 1 opera com velocidade reduzida.', 'Sistema'),
+('Novo Horário de Atendimento', 'A bilheteria da Estação Central agora funciona até as 23h.', 'Novidades'),
+('Manutenção de Escadas Rolantes', 'As escadas rolantes da Estação Norte passarão por manutenção neste fim de semana.', 'Manutenção');
