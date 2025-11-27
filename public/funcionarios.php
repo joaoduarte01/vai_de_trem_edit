@@ -4,9 +4,36 @@ require_once('../assets/config/db.php');
 
 $feedback = "";
 
-/* CADASTRAR FUNCIONÁRIO + LOGIN ADMIN */
+/* AÇÕES: CADASTRAR, EDITAR, EXCLUIR */
+$action = $_GET['action'] ?? '';
+$edit_id = $_GET['edit'] ?? null;
+$del_id = $_GET['delete'] ?? null;
+
+// EXCLUIR
+if ($del_id) {
+  $stmt = $mysqli->prepare("DELETE FROM employees WHERE id = ?");
+  $stmt->bind_param('i', $del_id);
+  if ($stmt->execute()) {
+    $feedback = "Funcionário excluído com sucesso!";
+  }
+  $stmt->close();
+}
+
+// EDITAR (Carregar dados)
+$edit_data = null;
+if ($edit_id) {
+  $stmt = $mysqli->prepare("SELECT * FROM employees WHERE id = ?");
+  $stmt->bind_param('i', $edit_id);
+  $stmt->execute();
+  $res = $stmt->get_result();
+  $edit_data = $res->fetch_assoc();
+  $stmt->close();
+}
+
+// POST (Cadastrar ou Atualizar)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+  $id = $_POST['id'] ?? '';
   $name = trim($_POST['name'] ?? '');
   $role = trim($_POST['role'] ?? '');
   $cep = trim($_POST['cep'] ?? '');
@@ -14,11 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $neigh = trim($_POST['neighborhood'] ?? '');
   $city = trim($_POST['city'] ?? '');
   $uf = trim($_POST['uf'] ?? '');
-
-  // LOGIN ADMIN
+  
+  // LOGIN ADMIN (Apenas no cadastro)
   $email = trim($_POST['email'] ?? '');
   $password = trim($_POST['password'] ?? '');
-  $hash = password_hash($password, PASSWORD_DEFAULT);
 
   // FOTO
   $photo = null;
@@ -32,37 +58,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
   }
 
-  if ($name && $role && $email && $password) {
+  if ($id) {
+    // ATUALIZAR
+    $sql = "UPDATE employees SET name=?, role=?, cep=?, street=?, neighborhood=?, city=?, uf=?";
+    $params = [$name, $role, $cep, $street, $neigh, $city, $uf];
+    $types = "sssssss";
 
-    /* 1 — INSERIR NA TABELA EMPLOYEES */
-    $stmt = $mysqli->prepare("
-      INSERT INTO employees (name, role, cep, street, neighborhood, city, uf, photo)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ");
-    $stmt->bind_param(
-      'ssssssss',
-      $name,
-      $role,
-      $cep,
-      $street,
-      $neigh,
-      $city,
-      $uf,
-      $photo
-    );
-    $stmt->execute();
+    if ($photo) {
+      $sql .= ", photo=?";
+      $params[] = $photo;
+      $types .= "s";
+    }
+
+    $sql .= " WHERE id=?";
+    $params[] = $id;
+    $types .= "i";
+
+    $stmt = $mysqli->prepare($sql);
+    $stmt->bind_param($types, ...$params);
+    
+    if ($stmt->execute()) {
+      $feedback = "Funcionário atualizado com sucesso!";
+      $edit_data = null; 
+      // header("Location: funcionarios.php"); exit;
+    }
     $stmt->close();
 
-    /* 2 — CRIAR LOGIN ADMIN */
-    $stmt2 = $mysqli->prepare("
-      INSERT INTO users (name, email, password, role, avatar)
-      VALUES (?, ?, ?, 'admin', ?)
-    ");
-    $stmt2->bind_param('ssss', $name, $email, $hash, $photo);
-    $stmt2->execute();
-    $stmt2->close();
+  } else {
+    // CADASTRAR
+    if ($name && $role && $email && $password) {
+      $hash = password_hash($password, PASSWORD_DEFAULT);
 
-    $feedback = "Funcionário cadastrado e login admin criado!";
+      /* 1 — INSERIR NA TABELA EMPLOYEES */
+      $stmt = $mysqli->prepare("
+        INSERT INTO employees (name, role, cep, street, neighborhood, city, uf, photo)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ");
+      $stmt->bind_param(
+        'ssssssss',
+        $name,
+        $role,
+        $cep,
+        $street,
+        $neigh,
+        $city,
+        $uf,
+        $photo
+      );
+      $stmt->execute();
+      $stmt->close();
+
+      /* 2 — CRIAR LOGIN ADMIN */
+      $stmt2 = $mysqli->prepare("
+        INSERT INTO users (name, email, password, role, avatar)
+        VALUES (?, ?, ?, 'admin', ?)
+      ");
+      $stmt2->bind_param('ssss', $name, $email, $hash, $photo);
+      $stmt2->execute();
+      $stmt2->close();
+
+      $feedback = "Funcionário cadastrado e login admin criado!";
+    }
   }
 }
 
@@ -136,34 +192,48 @@ $employees = $mysqli->query("SELECT * FROM employees ORDER BY id DESC");
   <!-- FORM -->
   <div class="form-card">
 
-    <h2>Cadastrar Funcionário</h2>
+    <h2><?php echo $edit_data ? 'Editar Funcionário' : 'Cadastrar Funcionário'; ?></h2>
 
     <form method="post" enctype="multipart/form-data">
+      
+      <?php if ($edit_data): ?>
+        <input type="hidden" name="id" value="<?php echo $edit_data['id']; ?>">
+      <?php endif; ?>
 
-      <img id="preview" class="photo-preview" src="../assets/uploads/profile_photos/avatar-default.png">
+      <img id="preview" class="photo-preview" src="<?php echo ($edit_data && $edit_data['photo']) 
+        ? '../assets/uploads/funcionarios/' . $edit_data['photo'] 
+        : '../assets/uploads/profile_photos/avatar-default.png'; ?>">
 
       <input type="file" name="photo" accept="image/*" class="input"
         onchange="preview.src = window.URL.createObjectURL(this.files[0])">
 
-      <input class="input" name="name" placeholder="Nome completo" required>
-      <input class="input" name="role" placeholder="Cargo no sistema" required>
+      <input class="input" name="name" placeholder="Nome completo" required value="<?php echo $edit_data['name'] ?? ''; ?>">
+      <input class="input" name="role" placeholder="Cargo no sistema" required value="<?php echo $edit_data['role'] ?? ''; ?>">
 
-      <input class="input" name="email" type="email" placeholder="E-mail de login" required>
-      <input class="input" name="password" type="password" placeholder="Senha de acesso" required>
+      <?php if (!$edit_data): ?>
+        <input class="input" name="email" type="email" placeholder="E-mail de login" required>
+        <input class="input" name="password" type="password" placeholder="Senha de acesso" required>
+      <?php else: ?>
+        <p style="font-size:12px; color:#666; margin-bottom:10px;">* Login e senha não podem ser alterados por aqui.</p>
+      <?php endif; ?>
 
-      <input class="input" id="cep" name="cep" placeholder="CEP" onblur="buscarCEP()">
+      <input class="input" id="cep" name="cep" placeholder="CEP" onblur="buscarCEP()" value="<?php echo $edit_data['cep'] ?? ''; ?>">
       <div style="display:flex; gap:10px; align-items:center;">
         <button type="button" class="btn" onclick="buscarCEP()" style="padding:10px 14px;">
           Verificar
         </button>
       </div>
 
-      <input class="input" id="city" name="city" placeholder="Cidade">
-      <input class="input" id="uf" name="uf" placeholder="UF">
-      <input class="input" id="street" name="street" placeholder="Rua">
-      <input class="input" id="neighborhood" name="neighborhood" placeholder="Bairro">
+      <input class="input" id="city" name="city" placeholder="Cidade" value="<?php echo $edit_data['city'] ?? ''; ?>">
+      <input class="input" id="uf" name="uf" placeholder="UF" value="<?php echo $edit_data['uf'] ?? ''; ?>">
+      <input class="input" id="street" name="street" placeholder="Rua" value="<?php echo $edit_data['street'] ?? ''; ?>">
+      <input class="input" id="neighborhood" name="neighborhood" placeholder="Bairro" value="<?php echo $edit_data['neighborhood'] ?? ''; ?>">
 
-      <button class="btn-save">Salvar Funcionário</button>
+      <button class="btn-save"><?php echo $edit_data ? 'Atualizar' : 'Salvar Funcionário'; ?></button>
+      
+      <?php if ($edit_data): ?>
+        <a href="funcionarios.php" class="btn secondary" style="margin-top:10px; display:block; text-align:center;">Cancelar</a>
+      <?php endif; ?>
 
     </form>
 
@@ -176,47 +246,22 @@ $employees = $mysqli->query("SELECT * FROM employees ORDER BY id DESC");
         ? '../assets/uploads/funcionarios/' . $f['photo']
         : '../assets/uploads/profile_photos/avatar-default.png'; ?>">
 
-      <div>
+      <div style="flex:1;">
         <strong><?php echo htmlspecialchars($f['name']); ?></strong><br>
         <small><?php echo htmlspecialchars($f['role']); ?></small><br>
         <small><img src="../assets/images/local_icone.png" alt="Local" class="icon-img" style="width:14px;height:14px;">
           <?php echo $f['city'] . " - " . $f['uf']; ?></small>
       </div>
+      
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <a href="?edit=<?php echo $f['id']; ?>" class="btn secondary" style="padding:6px 10px; font-size:12px;">Editar</a>
+        <a href="?delete=<?php echo $f['id']; ?>" class="btn" style="padding:6px 10px; font-size:12px; background:#ef4444; border-color:#dc2626;" onclick="return confirm('Tem certeza que deseja excluir?');">Excluir</a>
+      </div>
     </div>
   <?php endwhile; ?>
 
   <!-- NAV -->
-  <div class="bottom-nav">
-    <a href="dashboard.php">
-      <img src="../assets/images/inicio_png.png" alt="Início" class="icon-img"
-        style="width:24px;height:24px;margin-bottom:4px;">
-      <span>Início</span>
-    </a>
-
-    <a href="rotas.php">
-      <img src="../assets/images/rotas_icone.png" alt="Rotas" class="icon-img"
-        style="width:24px;height:24px;margin-bottom:4px;">
-      <span>Rotas</span>
-    </a>
-
-    <a href="chat.php">
-      <img src="../assets/images/notificacao_icone.png" alt="Chat" class="icon-img"
-        style="width:24px;height:24px;margin-bottom:4px;">
-      <span>Chat</span>
-    </a>
-
-    <a href="funcionarios.php" class="active">
-      <img src="../assets/images/icones_funcionarios.png" alt="Funcionários" class="icon-img"
-        style="width:24px;height:24px;margin-bottom:4px;">
-      <span>Funcionários</span>
-    </a>
-
-    <a href="logout_admin.php">
-      <img src="../assets/images/logout_icone.png" alt="Sair" class="icon-img"
-        style="width:24px;height:24px;margin-bottom:4px;">
-      <span>Sair</span>
-    </a>
-  </div>
+  <?php include '_partials/bottom_nav.php'; ?>
 
 
 </body>

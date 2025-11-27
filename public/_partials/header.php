@@ -18,7 +18,7 @@
     <a href="rotas.php">Rotas</a>
     <a href="avisos.php">Avisos</a>
     <a href="relatorios.php">Relatórios</a>
-    <a href="chat.php">Chat</a>
+
     <a href="perfil.php">Perfil</a>
     <a href="logout.php" class="badge">Sair</a>
   </div>

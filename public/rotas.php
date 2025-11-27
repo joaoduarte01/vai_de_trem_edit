@@ -109,49 +109,6 @@
             <input class="input" id="routeStops" placeholder="Paradas (separadas por vírgula)">
             <input class="input" id="routeDuration" placeholder="Duração (ex: 5h 30min)">
             <textarea class="input" id="routeExtra" placeholder="Informações adicionais (ex: atrasos, observações)"
-                rows="3"></textarea>
-            <button class="btn" style="margin-top:10px;width:100%;" onclick="saveRoute()">Salvar</button>
-        </div>
-    </div>
-
-    <!-- NAV INFERIOR -->
-    <div class="bottom-nav">
-        <a href="dashboard.php" class="active">
-            <img src="../assets/images/inicio_png.png" alt="Início" class="icon-img"
-                style="width:24px;height:24px;margin-bottom:4px;">
-            <span>Início</span>
-        </a>
-
-        <a href="rotas.php">
-            <img src="../assets/images/rotas_icone.png" alt="Rotas" class="icon-img"
-                style="width:24px;height:24px;margin-bottom:4px;">
-            <span>Rotas</span>
-        </a>
-
-        <a href="chat.php">
-            <img src="../assets/images/notificacao_icone.png" alt="Chat" class="icon-img"
-                style="width:24px;height:24px;margin-bottom:4px;">
-            <span>Chat</span>
-        </a>
-
-        <a href="funcionarios.php">
-            <img src="../assets/images/icones_funcionarios.png" alt="Funcionários" class="icon-img"
-                style="width:24px;height:24px;margin-bottom:4px;">
-            <span>Funcionários</span>
-        </a>
-
-        <a href="logout_admin.php">
-            <img src="../assets/images/logout_icone.png" alt="Sair" class="icon-img"
-                style="width:24px;height:24px;margin-bottom:4px;">
-            <span>Sair</span>
-        </a>
-    </div>
-
-    <script>
-        let editingCard = null;
-
-        function openModal(card = null) {
-            const modalBg = document.getElementById("modal");
             const titleEl = document.getElementById("modalTitle");
             const nameInput = document.getElementById("routeName");
             const stopsInput = document.getElementById("routeStops");

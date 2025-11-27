@@ -25,7 +25,7 @@ require_once('../assets/config/db.php');
 
   <?php
   $routesAtivas = $mysqli->query("SELECT COUNT(*) AS total FROM routes WHERE status='ativa'")->fetch_assoc()['total'];
-  $notices = $mysqli->query("SELECT COUNT(*) AS total FROM notices")->fetch_assoc()['total'];
+  $notices_count = $mysqli->query("SELECT COUNT(*) AS total FROM notices")->fetch_assoc()['total'];
   $employees = $mysqli->query("SELECT COUNT(*) AS total FROM employees")->fetch_assoc()['total'];
   ?>
 
@@ -48,12 +48,41 @@ require_once('../assets/config/db.php');
     <div class="stat-card">
       <img src="../assets/images/notificacao_icone.png" alt="Avisos" class="icon-img"
         style="width:28px;height:28px;margin:0 auto;">
-      <div class="stat-value"><?php echo $notices; ?></div>
+      <div class="stat-value"><?php echo $notices_count; ?></div>
       <div class="stat-label">Avisos</div>
     </div>
   </div>
 
-  <!-- QUICK ACCESS -->
+  <!-- AVISOS RECENTES -->
+  <div class="recent-section">
+    <h2>Avisos Recentes</h2>
+    <?php
+    $res = $mysqli->query("SELECT * FROM notices ORDER BY id DESC LIMIT 5");
+    if ($res->num_rows > 0) {
+      while ($n = $res->fetch_assoc()) {
+        $badge = match ($n['tag']) {
+          'Manutenção' => '<span class="badge red">Manutenção</span>',
+          'Novidades' => '<span class="badge blue">Novidades</span>',
+          default => '<span class="badge">Sistema</span>',
+        };
+
+        echo "
+        <div class='notice-card'>
+          <div class='notice-top'>
+            <div class='notice-title'>" . htmlspecialchars($n['title']) . "</div>
+            $badge
+          </div>
+          <div class='notice-body'>" . nl2br(htmlspecialchars($n['body'])) . "</div>
+          <div class='notice-date'>" . date('d/m/Y H:i', strtotime($n['created_at'])) . "</div>
+        </div>";
+      }
+    } else {
+      echo "<p style='padding:0 20px;'>Nenhum aviso recente.</p>";
+    }
+    ?>
+  </div>
+
+  <!-- ACESSO RÁPIDO -->
   <div class="quick-section">
     <h2>Acesso Rápido</h2>
 
@@ -62,12 +91,6 @@ require_once('../assets/config/db.php');
         <img src="../assets/images/icones_funcionarios.png" alt="Funcionários" class="icon-img"
           style="width:26px;height:26px;margin:0 auto;">
         <div class="quick-card-title">Funcionários</div>
-      </a>
-
-      <a href="chat.php" class="quick-card">
-        <img src="../assets/images/notificacao_icone.png" alt="Chat" class="icon-img"
-          style="width:26px;height:26px;margin:0 auto;">
-        <div class="quick-card-title">Chat</div>
       </a>
 
       <a href="rotas.php" class="quick-card">
@@ -90,7 +113,7 @@ require_once('../assets/config/db.php');
     </div>
   </div>
 
-  <!-- RECENT ACTIVITY -->
+  <!-- ATIVIDADES RECENTES -->
   <div class="recent-section">
     <h2>Atividades Recentes</h2>
 
@@ -116,37 +139,8 @@ require_once('../assets/config/db.php');
     </div>
   </div>
 
-  <div class="bottom-nav">
-    <a href="dashboard.php" class="active">
-      <img src="../assets/images/inicio_png.png" alt="Início" class="icon-img"
-        style="width:24px;height:24px;margin-bottom:4px;">
-      <span>Início</span>
-    </a>
-
-    <a href="rotas.php">
-      <img src="../assets/images/rotas_icone.png" alt="Rotas" class="icon-img"
-        style="width:24px;height:24px;margin-bottom:4px;">
-      <span>Rotas</span>
-    </a>
-
-    <a href="chat.php">
-      <img src="../assets/images/notificacao_icone.png" alt="Chat" class="icon-img"
-        style="width:24px;height:24px;margin-bottom:4px;">
-      <span>Chat</span>
-    </a>
-
-    <a href="funcionarios.php">
-      <img src="../assets/images/icones_funcionarios.png" alt="Funcionários" class="icon-img"
-        style="width:24px;height:24px;margin-bottom:4px;">
-      <span>Funcionários</span>
-    </a>
-
-    <a href="logout_admin.php">
-      <img src="../assets/images/logout_icone.png" alt="Sair" class="icon-img"
-        style="width:24px;height:24px;margin-bottom:4px;">
-      <span>Sair</span>
-    </a>
-  </div>
+  <!-- NAV -->
+  <?php include '_partials/bottom_nav.php'; ?>
 
 
 </body>
