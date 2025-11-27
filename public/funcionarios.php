@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $photo = $_POST['selected_photo'];
     }
 
+        
     if ($action === 'create') {
         // 1. Inserir Funcionário
         $stmt = $mysqli->prepare("INSERT INTO employees (name, role, cep, street, neighborhood, city, uf, photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -54,8 +55,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 2. Criar Usuário de Acesso (apenas se email/senha fornecidos)
             if ($email && $password) {
                 $hash = password_hash($password, PASSWORD_DEFAULT);
-                $stmt2 = $mysqli->prepare("INSERT INTO users (name, email, password, role, avatar) VALUES (?, ?, ?, 'admin', ?)");
-                $stmt2->bind_param('ssss', $name, $email, $hash, $photo);
+                // Mapeando: role (employees) -> job_title (users)
+                // O campo 'role' na tabela users é o nível de acesso (admin/user)
+                $stmt2 = $mysqli->prepare("INSERT INTO users (name, email, password, role, avatar, job_title) VALUES (?, ?, ?, 'admin', ?, ?)");
+                $stmt2->bind_param('sssss', $name, $email, $hash, $photo, $role);
                 $stmt2->execute();
             }
             $feedback = "Funcionário cadastrado com sucesso!";
