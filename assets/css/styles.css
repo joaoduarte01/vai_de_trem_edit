@@ -763,17 +763,98 @@ label {
 }
 
 /* Responsive */
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
+  body {
+    padding-bottom: 0;
+    padding-left: 260px;
+    /* Space for Sidebar */
+  }
+
   .container {
     padding: 40px;
+    max-width: 1400px;
+  }
+
+  /* Sidebar Transformation */
+  .bottom-nav {
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    height: 100vh;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: 100px;
+    /* Space for brand/header if needed */
+    border-top: none;
+    border-right: 1px solid var(--border-color);
+    background: var(--surface);
+    align-items: flex-start;
+  }
+
+  .bottom-nav a {
+    flex-direction: row;
+    width: 100%;
+    padding: 16px 32px;
+    gap: 16px;
+    font-size: 1rem;
+    border-radius: 0;
+    border-right: 3px solid transparent;
+  }
+
+  .bottom-nav a:hover {
+    transform: translateX(4px);
+    background: var(--bg);
+  }
+
+  .bottom-nav a.active {
+    background: var(--brand-bg);
+    border-right-color: var(--brand);
+    color: var(--brand-dark);
+    transform: none;
+  }
+
+  .bottom-nav a i,
+  .bottom-nav a img {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Header Adjustment */
+  .top-header {
+    padding-left: 40px;
+    left: 260px;
+    /* If fixed, needs to respect sidebar */
+    width: calc(100% - 260px);
+    /* Adjust width */
+  }
+
+  /* Grids */
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
 
   .route-list {
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   }
 
-  .bottom-nav {
-    padding-left: 20%;
-    padding-right: 20%;
+  /* Modals */
+  .modal-bg {
+    align-items: center;
+    padding: 40px;
+  }
+
+  .modal {
+    max-width: 600px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .container {
+    padding: 32px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
 }
