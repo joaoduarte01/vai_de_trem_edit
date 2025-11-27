@@ -514,21 +514,7 @@ label {
   transition: transform 0.3s ease;
 }
 
-.stat-card:hover i {
-  transform: scale(1.1) rotate(5deg);
-}
-
-.stat-value {
-  font-size: 2rem;
-  font-weight: 800;
-  color: var(--text);
-  letter-spacing: -0.02em;
-}
-
-.stat-label {
-  font-size: 0.9rem;
-  color: var(--text-light);
-  font-weight: 500;
+font-weight: 500;
 }
 
 /* Recent Activity & Notices */
