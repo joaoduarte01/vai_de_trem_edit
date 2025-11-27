@@ -315,7 +315,8 @@ label {
   border-top: 1px solid var(--border);
   display: flex;
   justify-content: space-around;
-  padding: 12px 0;
+  padding: 8px 4px;
+  /* Reduced padding */
   z-index: 100;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
 }
@@ -328,14 +329,28 @@ label {
   color: var(--text-light);
   font-size: 0.75rem;
   font-weight: 600;
-  padding: 8px 16px;
+  padding: 6px 2px;
+  /* Minimal horizontal padding */
   border-radius: var(--radius);
   transition: var(--transition);
+  flex: 1;
+  /* Distribute space equally */
+  min-width: 0;
+  /* Allow shrinking */
 }
 
 .bottom-nav a i {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
+  /* Slightly smaller icons */
   transition: var(--transition);
+  margin-bottom: 2px;
+}
+
+/* Hide text on very small screens if needed, or scale it down */
+@media (max-width: 380px) {
+  .bottom-nav a {
+    font-size: 0.65rem;
+  }
 }
 
 .bottom-nav a:hover {
@@ -763,7 +778,7 @@ label {
 }
 
 /* Responsive */
-@media (min-width: 1024px) {
+@media (min-width: 992px) {
   body {
     padding-bottom: 0;
     padding-left: 260px;
@@ -787,7 +802,7 @@ label {
     padding-top: 100px;
     /* Space for brand/header if needed */
     border-top: none;
-    border-right: 1px solid var(--border-color);
+    border-right: 1px solid var(--border);
     background: var(--surface);
     align-items: flex-start;
   }
@@ -849,7 +864,7 @@ label {
   }
 }
 
-@media (min-width: 768px) and (max-width: 1023px) {
+@media (min-width: 768px) and (max-width: 991px) {
   .container {
     padding: 32px;
   }
