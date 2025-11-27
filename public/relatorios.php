@@ -51,12 +51,6 @@ require_once('../assets/config/db.php');
       <img src="https://s3.amazonaws.com/thumbnails.venngage.com/template/0e364154-2c6b-43d4-a2c5-fee2da9c77a5.png"
         alt="gráfico">
     </div>
-
-    <div class="chart-card">
-      <strong>Distribuição por Rota</strong>
-      <div class="chart-sub">Percentual de uso </div>
-      <img
-        src="https://learn.microsoft.com/pt-br/sql/reporting-services/media/report-builder-column-chart-moving-average.png?view=sql-server-ver17"
 <?php
 require_once('../assets/config/auth.php');
 require_once('../assets/config/db.php');
