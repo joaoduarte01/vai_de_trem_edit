@@ -1,6 +1,36 @@
 <?php
 require_once('../assets/config/auth.php');
 require_once('../assets/config/db.php');
+
+// PROCESSAR FORMULÁRIO DE AVISOS
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    $id = $_POST['id'] ?? '';
+    $title = trim($_POST['title'] ?? '');
+    $body = trim($_POST['body'] ?? '');
+    $tag = $_POST['tag'] ?? 'Sistema';
+
+    if ($action === 'update' && $id) {
+        $stmt = $mysqli->prepare("UPDATE notices SET title=?, body=?, tag=? WHERE id=?");
+        $stmt->bind_param('sssi', $title, $body, $tag, $id);
+        $stmt->execute();
+    } elseif ($action === 'delete' && $id) {
+        $stmt = $mysqli->prepare("DELETE FROM notices WHERE id=?");
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+    }
+
+    header('Location: dashboard.php');
+    exit;
+}
+
+// DELETE VIA GET (Opcional, mas mantendo padrão)
+if (isset($_GET['delete_notice'])) {
+    $id = (int)$_GET['delete_notice'];
+    $mysqli->query("DELETE FROM notices WHERE id=$id");
+    header('Location: dashboard.php');
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -66,51 +96,27 @@ require_once('../assets/config/db.php');
           default => '<span class="badge">Sistema</span>',
         };
 
+        // Prepara dados para o JS
+        $jsonData = htmlspecialchars(json_encode($n), ENT_QUOTES, 'UTF-8');
+
         echo "
-        <div class='notice-card'>
+        <div class='notice-card' style='position:relative;'>
           <div class='notice-top'>
             <div class='notice-title'>" . htmlspecialchars($n['title']) . "</div>
             $badge
           </div>
           <div class='notice-body'>" . nl2br(htmlspecialchars($n['body'])) . "</div>
           <div class='notice-date'>" . date('d/m/Y H:i', strtotime($n['created_at'])) . "</div>
+          
+          <div style='position:absolute; top:10px; right:10px; cursor:pointer;' onclick='editNotice($jsonData)'>
+            <i class='ri-pencil-line' style='color:var(--muted); font-size:18px;'></i>
+          </div>
         </div>";
       }
     } else {
       echo "<p style='padding:0 20px;'>Nenhum aviso recente.</p>";
     }
     ?>
-  </div>
-
-  <!-- ACESSO RÁPIDO -->
-  <div class="quick-section">
-    <h2>Acesso Rápido</h2>
-
-    <div class="quick-grid">
-      <a href="funcionarios.php" class="quick-card">
-        <img src="../assets/images/icones_funcionarios.png" alt="Funcionários" class="icon-img"
-          style="width:26px;height:26px;margin:0 auto;">
-        <div class="quick-card-title">Funcionários</div>
-      </a>
-
-      <a href="rotas.php" class="quick-card">
-        <img src="../assets/images/rotas_icone.png" alt="Rotas" class="icon-img"
-          style="width:26px;height:26px;margin:0 auto;">
-        <div class="quick-card-title">Rotas</div>
-      </a>
-
-      <a href="avisos.php" class="quick-card">
-        <img src="../assets/images/notificacao_icone.png" alt="Avisos" class="icon-img"
-          style="width:26px;height:26px;margin:0 auto;">
-        <div class="quick-card-title">Avisos</div>
-      </a>
-
-      <a href="relatorios.php" class="quick-card">
-        <img src="../assets/images/grafico_icone.png" alt="Relatórios" class="icon-img"
-          style="width:26px;height:26px;margin:0 auto;">
-        <div class="quick-card-title">Relatórios</div>
-      </a>
-    </div>
   </div>
 
   <!-- ATIVIDADES RECENTES -->
@@ -138,6 +144,74 @@ require_once('../assets/config/db.php');
       08:47 — Manutenção agendada em rota SP → Campinas
     </div>
   </div>
+
+  <!-- MODAL AVISOS -->
+  <div class="modal-bg" id="noticeModal">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2 id="modalTitle">Editar Aviso</h2>
+      <form method="post">
+        <input type="hidden" name="action" value="update">
+        <input type="hidden" name="id" id="noticeId">
+
+        <label>Título</label>
+        <input class="input" name="title" id="noticeTitle" required>
+
+        <label>Tag</label>
+        <select class="select" name="tag" id="noticeTag">
+          <option value="Sistema">Sistema</option>
+          <option value="Manutenção">Manutenção</option>
+          <option value="Novidades">Novidades</option>
+        </select>
+
+        <label>Mensagem</label>
+        <textarea class="textarea" name="body" id="noticeBody" rows="4" required></textarea>
+
+        <div style="display:flex; gap:10px; margin-top:15px;">
+          <button type="button" class="btn secondary" onclick="closeNoticeModal()">Cancelar</button>
+          <button type="submit" class="btn">Salvar</button>
+        </div>
+
+        <div style="margin-top:10px; text-align:center;">
+          <a href="#" id="deleteNoticeLink" class="btn" style="background:#fee2e2; color:#991b1b; border-color:#fca5a5; display:block;">Excluir Aviso</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const noticeModal = document.getElementById("noticeModal");
+    const noticeId = document.getElementById("noticeId");
+    const noticeTitle = document.getElementById("noticeTitle");
+    const noticeTag = document.getElementById("noticeTag");
+    const noticeBody = document.getElementById("noticeBody");
+    const deleteNoticeLink = document.getElementById("deleteNoticeLink");
+
+    function editNotice(data) {
+      noticeId.value = data.id;
+      noticeTitle.value = data.title;
+      noticeTag.value = data.tag;
+      noticeBody.value = data.body;
+
+      deleteNoticeLink.href = "?delete_notice=" + data.id;
+      deleteNoticeLink.onclick = function(e) {
+        if (!confirm('Tem certeza que deseja excluir este aviso?')) {
+          e.preventDefault();
+        }
+      };
+
+      noticeModal.style.display = "flex";
+    }
+
+    function closeNoticeModal() {
+      noticeModal.style.display = "none";
+    }
+
+    window.addEventListener("click", function(e) {
+      if (e.target === noticeModal) {
+        closeNoticeModal();
+      }
+    });
+  </script>
 
   <!-- NAV -->
   <?php include '_partials/bottom_nav.php'; ?>

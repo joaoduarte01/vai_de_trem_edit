@@ -1,4 +1,66 @@
-<?php require_once('../assets/config/auth.php'); ?>
+<?php
+require_once('../assets/config/auth.php');
+require_once('../assets/config/db.php');
+
+// Helper para formatar duração
+function formatDuration($minutes) {
+    if (!$minutes) return '0min';
+    $hours = floor($minutes / 60);
+    $mins = $minutes % 60;
+    if ($hours > 0) {
+        return "{$hours}h {$mins}min";
+    }
+    return "{$mins}min";
+}
+
+// PROCESSAR FORMULÁRIO
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    $id = $_POST['id'] ?? '';
+    
+    // Novos campos
+    $origin = trim($_POST['origin'] ?? '');
+    $destination = trim($_POST['destination'] ?? '');
+    
+    // Duração agora vem em horas e minutos
+    $hours = (int)($_POST['duration_hours'] ?? 0);
+    $minutes = (int)($_POST['duration_minutes'] ?? 0);
+    $duration_minutes = ($hours * 60) + $minutes;
+
+    // Nome da rota é composto
+    $name = "$origin → $destination";
+
+    $stops = trim($_POST['stops'] ?? '');
+    $extra_info = trim($_POST['extra_info'] ?? '');
+    $status = $_POST['status'] ?? 'ativa';
+
+    if ($action === 'create') {
+        $stmt = $mysqli->prepare("INSERT INTO routes (name, origin, destination, stops, duration_minutes, extra_info, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param('ssssiss', $name, $origin, $destination, $stops, $duration_minutes, $extra_info, $status);
+        $stmt->execute();
+    } elseif ($action === 'update' && $id) {
+        $stmt = $mysqli->prepare("UPDATE routes SET name=?, origin=?, destination=?, stops=?, duration_minutes=?, extra_info=?, status=? WHERE id=?");
+        $stmt->bind_param('ssssissi', $name, $origin, $destination, $stops, $duration_minutes, $extra_info, $status, $id);
+        $stmt->execute();
+    } elseif ($action === 'delete' && $id) {
+        $stmt = $mysqli->prepare("DELETE FROM routes WHERE id=?");
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+    }
+
+    header('Location: rotas.php');
+    exit;
+}
+
+// DELETE VIA GET
+if (isset($_GET['delete'])) {
+    $id = (int)$_GET['delete'];
+    $mysqli->query("DELETE FROM routes WHERE id=$id");
+    header('Location: rotas.php');
+    exit;
+}
+
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -20,223 +82,192 @@
             Rotas</h1>
     </div>
 
-    <!-- LISTA VISUAL DE ROTAS -->
-    <div class="route-list" id="routeList">
+    <!-- LISTA DE ROTAS -->
+    <div class="route-list" id="routeList" style="padding-bottom: 80px;">
+        <?php
+        $res = $mysqli->query("SELECT * FROM routes ORDER BY id DESC");
+        while ($r = $res->fetch_assoc()) {
+            $badgeClass = ($r['status'] === 'manutencao') ? 'red' : 'blue';
+            $badgeText = ($r['status'] === 'manutencao') ? 'Manutenção' : 'Ativa';
+            $durationFmt = formatDuration($r['duration_minutes']);
+            
+            // Prepara dados para o JS
+            $jsonData = htmlspecialchars(json_encode($r), ENT_QUOTES, 'UTF-8');
+            
+            echo "
+            <div class='route-card' onclick='editRoute($jsonData)'>
+                <div class='route-title'>" . htmlspecialchars($r['name']) . "</div>
+                <span class='badge $badgeClass'>$badgeText</span>
 
-        <!-- ROTA 1 -->
-        <div class="route-card" onclick="openModal(this)">
-            <div class="route-title">São Paulo → Rio de Janeiro</div>
-            <span class="badge blue">Ativa</span>
+                <div class='details'>
+                    <img src='../assets/images/local_icone.png' class='icon-img' style='width:16px;height:16px;'> Paradas: " . htmlspecialchars($r['stops'] ?? '') . "<br>
+                    <img src='../assets/images/relogio_icone.png' class='icon-img' style='width:16px;height:16px;'> Duração: $durationFmt
+                </div>
 
-            <div class="details">
-                <img src="../assets/images/local_icone.png" alt="Paradas" class="icon-img"
-                    style="width:16px;height:16px;"> Paradas: Estação Central • Estação Norte • Estação Sul<br>
-                <img src="../assets/images/relogio_icone.png" alt="Duração" class="icon-img"
-                    style="width:16px;height:16px;"> Duração: 6h 30min
-            </div>
-
-            <div class="live-info">
-                <img src="../assets/images/relogio_icone.png" alt="Atualização" class="icon-img"
-                    style="width:16px;height:16px;"> Última atualização: 08:32 — Trem chegando em Estação Norte
-            </div>
-        </div>
-
-        <!-- ROTA 2 -->
-        <div class="route-card" onclick="openModal(this)">
-            <div class="route-title">Campinas → Santos</div>
-            <span class="badge blue">Ativa</span>
-
-            <div class="details">
-                <img src="../assets/images/local_icone.png" alt="Paradas" class="icon-img"
-                    style="width:16px;height:16px;"> Paradas: KM45 • Ponte Rio Grande<br>
-                <img src="../assets/images/relogio_icone.png" alt="Duração" class="icon-img"
-                    style="width:16px;height:16px;"> Duração: 3h 45min
-            </div>
-
-            <div class="live-info">
-                <img src="../assets/images/notificacao_icone.png" alt="Alerta" class="icon-img"
-                    style="width:16px;height:16px;"> 5 min de atraso — trecho em velocidade reduzida
-            </div>
-        </div>
-
-        <!-- ROTA 3 -->
-        <div class="route-card" onclick="openModal(this)">
-            <div class="route-title">Belo Horizonte → São Paulo</div>
-            <span class="badge red">Manutenção</span>
-
-            <div class="details">
-                <img src="../assets/images/local_icone.png" alt="Paradas" class="icon-img"
-                    style="width:16px;height:16px;"> Paradas: Estação Sul • Estação Central<br>
-                <img src="../assets/images/relogio_icone.png" alt="Duração" class="icon-img"
-                    style="width:16px;height:16px;"> Duração: 8h 15min
-            </div>
-
-            <div class="live-info">
-                <img src="../assets/images/notificacao_icone.png" alt="Aviso" class="icon-img"
-                    style="width:16px;height:16px;"> Operação suspensa até 15/11
-            </div>
-        </div>
-
-        <!-- ROTA 4 -->
-        <div class="route-card" onclick="openModal(this)">
-            <div class="route-title">Curitiba → Florianópolis</div>
-            <span class="badge blue">Ativa</span>
-
-            <div class="details">
-                <img src="../assets/images/local_icone.png" alt="Paradas" class="icon-img"
-                    style="width:16px;height:16px;"> Paradas: Estação Norte • Ponte Rio Grande<br>
-                <img src="../assets/images/relogio_icone.png" alt="Duração" class="icon-img"
-                    style="width:16px;height:16px;"> Duração: 5h 20min
-            </div>
-
-            <div class="live-info">
-                <img src="../assets/images/notificacao_icone.png" alt="OK" class="icon-img"
-                    style="width:16px;height:16px;"> Trem pontual — tudo normal
-            </div>
-        </div>
-
+                <div class='live-info'>
+                    <img src='../assets/images/notificacao_icone.png' class='icon-img' style='width:16px;height:16px;'> " . ($r['extra_info'] ? htmlspecialchars($r['extra_info']) : 'Sem informações adicionais') . "
+                </div>
+            </div>";
+        }
+        ?>
     </div>
 
-    <!-- BOTÃO "+" -->
-    <div class="fab" onclick="openModal()"><img src="../assets/images/rotas_icone.png" alt="Adicionar" class="icon-img"
-            style="width:28px;height:28px;filter: brightness(0) invert(1);"></div>
+    <!-- BOTÃO "+" (FAB) -->
+    <div class="fab" onclick="openCreateModal()">
+        <i class="ri-add-line" style="font-size: 32px;"></i>
+    </div>
 
-    <!-- MODAL VISUAL -->
+    <!-- MODAL -->
     <div class="modal-bg" id="modal">
         <div class="modal" onclick="event.stopPropagation()">
             <h2 id="modalTitle">Nova Rota</h2>
-            <input class="input" id="routeName" placeholder="Nome da rota">
-            <input class="input" id="routeStops" placeholder="Paradas (separadas por vírgula)">
-            <input class="input" id="routeDuration" placeholder="Duração (ex: 5h 30min)">
-            <textarea class="input" id="routeExtra" placeholder="Informações adicionais (ex: atrasos, observações)"
-            const titleEl = document.getElementById("modalTitle");
-            const nameInput = document.getElementById("routeName");
-            const stopsInput = document.getElementById("routeStops");
-            const durationInput = document.getElementById("routeDuration");
-            const extraInput = document.getElementById("routeExtra");
+            <form method="post">
+                <input type="hidden" name="action" id="formAction" value="create">
+                <input type="hidden" name="id" id="routeId">
 
-            editingCard = card;
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1;">
+                        <label>Local de Embarque</label>
+                        <input class="input" name="origin" id="routeOrigin" placeholder="Ex: São Paulo" required>
+                    </div>
+                    <div style="flex:1;">
+                        <label>Destino</label>
+                        <input class="input" name="destination" id="routeDestination" placeholder="Ex: Rio de Janeiro" required>
+                    </div>
+                </div>
 
-            if (editingCard) {
-                // Modo editar rota existente
-                titleEl.textContent = "Editar Rota";
+                <label>Paradas</label>
+                <input class="input" name="stops" id="routeStops" placeholder="Separadas por vírgula" required>
 
-                const title = editingCard.querySelector(".route-title")?.innerText || "";
-                const details = editingCard.querySelector(".details")?.innerText || "";
-                const liveInfo = editingCard.querySelector(".live-info")?.innerText || "";
+                <label>Duração</label>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <div style="flex:1;">
+                        <input type="number" class="input" name="duration_hours" id="routeHours" placeholder="Horas" min="0" required>
+                    </div>
+                    <span>h</span>
+                    <div style="flex:1;">
+                        <input type="number" class="input" name="duration_minutes" id="routeMinutes" placeholder="Minutos" min="0" max="59" required>
+                    </div>
+                    <span>min</span>
+                </div>
 
-                nameInput.value = title.trim();
+                <label>Status</label>
+                <select class="select" name="status" id="routeStatus">
+                    <option value="ativa">Ativa</option>
+                    <option value="manutencao">Manutenção</option>
+                </select>
 
-                // Pega texto entre "Paradas:" e "Duração:"
-                let stopsText = "";
-                let durationText = "";
+                <label>Informações Adicionais</label>
+                <textarea class="textarea" name="extra_info" id="routeExtra" rows="2" placeholder="Ex: Atrasos, previsões..."></textarea>
 
-                if (details.includes("Paradas:")) {
-                    stopsText = details.split("Paradas:")[1] || "";
-                    if (stopsText.includes("Duração:")) {
-                        const parts = stopsText.split("Duração:");
-                        stopsText = parts[0];
-                        durationText = parts[1];
-                    }
-                }
-                if (!durationText && details.includes("Duração:")) {
-                    durationText = details.split("Duração:")[1] || "";
-                }
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn">Salvar</button>
+                </div>
+                
+                <div id="deleteBtnContainer" style="margin-top:10px; text-align:center; display:none;">
+                    <a href="#" id="deleteLink" class="btn" style="background:#fee2e2; color:#991b1b; border-color:#fca5a5;">Excluir Rota</a>
+                </div>
+            </form>
+        </div>
+    </div>
 
-                stopsInput.value = stopsText.replace(/\s+/g, " ").trim();
-                durationInput.value = durationText.replace(/\s+/g, " ").trim();
+    <script>
+        const modalBg = document.getElementById("modal");
+        const modalTitle = document.getElementById("modalTitle");
+        const formAction = document.getElementById("formAction");
+        const routeId = document.getElementById("routeId");
+        
+        const routeOrigin = document.getElementById("routeOrigin");
+        const routeDestination = document.getElementById("routeDestination");
+        
+        const routeStops = document.getElementById("routeStops");
+        
+        const routeHours = document.getElementById("routeHours");
+        const routeMinutes = document.getElementById("routeMinutes");
+        
+        const routeStatus = document.getElementById("routeStatus");
+        const routeExtra = document.getElementById("routeExtra");
+        const deleteBtnContainer = document.getElementById("deleteBtnContainer");
+        const deleteLink = document.getElementById("deleteLink");
 
-                extraInput.value = liveInfo
-                    .replace(/\s+/g, " ")
-                    .replace(/^\s*[\u200B-\u200D\uFEFF]/g, "")
-                    .trim();
+        function openCreateModal() {
+            modalTitle.textContent = "Nova Rota";
+            formAction.value = "create";
+            routeId.value = "";
+            
+            routeOrigin.value = "";
+            routeDestination.value = "";
+            
+            routeStops.value = "";
+            
+            routeHours.value = "";
+            routeMinutes.value = "";
+            
+            routeStatus.value = "ativa";
+            routeExtra.value = "";
+            deleteBtnContainer.style.display = "none";
+            modalBg.style.display = "flex";
+        }
+
+        function editRoute(data) {
+            modalTitle.textContent = "Editar Rota";
+            formAction.value = "update";
+            routeId.value = data.id;
+            
+            // Tenta usar os campos novos, se não existirem, tenta extrair do nome
+            if (data.origin && data.destination) {
+                routeOrigin.value = data.origin;
+                routeDestination.value = data.destination;
             } else {
-                // Modo criar nova rota
-                titleEl.textContent = "Nova Rota";
-                nameInput.value = "";
-                stopsInput.value = "";
-                durationInput.value = "";
-                extraInput.value = "";
+                // Fallback: tenta quebrar "Origem → Destino"
+                if (data.name && data.name.includes("→")) {
+                    const parts = data.name.split("→");
+                    routeOrigin.value = parts[0].trim();
+                    routeDestination.value = parts[1].trim();
+                } else {
+                    routeOrigin.value = data.name;
+                    routeDestination.value = "";
+                }
             }
+
+            routeStops.value = data.stops || "";
+            
+            // Converter minutos para horas e minutos
+            let totalMin = parseInt(data.duration_minutes) || 0;
+            let h = Math.floor(totalMin / 60);
+            let m = totalMin % 60;
+            
+            routeHours.value = h;
+            routeMinutes.value = m;
+
+            routeStatus.value = data.status;
+            routeExtra.value = data.extra_info || "";
+
+            // Configurar botão de excluir
+            deleteLink.href = "?delete=" + data.id;
+            deleteLink.onclick = function(e) {
+                if(!confirm('Tem certeza que deseja excluir esta rota?')) {
+                    e.preventDefault();
+                }
+            };
+            deleteBtnContainer.style.display = "block";
 
             modalBg.style.display = "flex";
         }
 
         function closeModal() {
-            document.getElementById("modal").style.display = "none";
-            editingCard = null;
+            modalBg.style.display = "none";
         }
 
-        function saveRoute() {
-            const nameInput = document.getElementById("routeName");
-            const stopsInput = document.getElementById("routeStops");
-            const durationInput = document.getElementById("routeDuration");
-            const extraInput = document.getElementById("routeExtra");
-            const routeList = document.getElementById("routeList");
-
-            const name = nameInput.value.trim();
-            const stops = stopsInput.value.trim();
-            const duration = durationInput.value.trim();
-            const extra = extraInput.value.trim();
-
-            if (!name || !stops || !duration) {
-                alert("Preencha pelo menos Nome da rota, Paradas e Duração.");
-                return;
-            }
-
-            if (editingCard) {
-                // Atualizar rota existente
-                const titleEl = editingCard.querySelector(".route-title");
-                const detailsEl = editingCard.querySelector(".details");
-                const liveInfoEl = editingCard.querySelector(".live-info");
-
-                if (titleEl) titleEl.innerText = name;
-                if (detailsEl) {
-                    detailsEl.innerHTML =
-                        '<img src="../assets/images/local_icone.png" class="icon-img" style="width:16px;height:16px;"> Paradas: ' + stops +
-                        '<br><img src="../assets/images/relogio_icone.png" class="icon-img" style="width:16px;height:16px;"> Duração: ' + duration;
-                }
-                if (liveInfoEl) {
-                    liveInfoEl.innerHTML =
-                        (extra
-                            ? '<img src="../assets/images/notificacao_icone.png" class="icon-img" style="width:16px;height:16px;"> ' + extra
-                            : '<img src="../assets/images/notificacao_icone.png" class="icon-img" style="width:16px;height:16px;"> Sem informações adicionais');
-                }
-            } else {
-                // Criar nova rota
-                const newCard = document.createElement("div");
-                newCard.className = "route-card";
-                newCard.onclick = function () { openModal(newCard); };
-
-                newCard.innerHTML = `
-            <div class="route-title">${name}</div>
-            <span class="badge blue">Ativa</span>
-
-            <div class="details">
-                <img src="../assets/images/local_icone.png" class="icon-img" style="width:16px;height:16px;"> Paradas: ${stops}<br>
-                <img src="../assets/images/relogio_icone.png" class="icon-img" style="width:16px;height:16px;"> Duração: ${duration}
-            </div>
-
-            <div class="live-info">
-                ${extra
-                        ? `<img src="../assets/images/notificacao_icone.png" class="icon-img" style="width:16px;height:16px;"> ${extra}`
-                        : `<img src="../assets/images/notificacao_icone.png" class="icon-img" style="width:16px;height:16px;"> Sem informações adicionais`}
-            </div>
-        `;
-
-                routeList.appendChild(newCard);
-            }
-
-            closeModal();
-        }
-
-        // fechar clicando fora do box
         window.addEventListener("click", function (e) {
-            if (e.target.id === "modal") {
+            if (e.target === modalBg) {
                 closeModal();
             }
         });
     </script>
+
+    <?php include '_partials/bottom_nav.php'; ?>
 
 </body>
 
