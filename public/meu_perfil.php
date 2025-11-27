@@ -13,11 +13,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // Avatar
   $avatarPath = $user['avatar'];
+  
+  // 1. Upload
   if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
-
     $ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
     $fname = 'u' . $user['id'] . '_' . time() . '.' . $ext;
-
     $dest = '../assets/uploads/profile_photos/' . $fname;
 
     // Ensure directory exists
@@ -28,6 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (move_uploaded_file($_FILES['avatar']['tmp_name'], $dest)) {
       $avatarPath = $fname;
     }
+  } 
+  // 2. Galeria
+  elseif (!empty($_POST['selected_photo'])) {
+      $avatarPath = $_POST['selected_photo'];
   }
 
   // Update
@@ -43,6 +47,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $res = $mysqli->query("SELECT * FROM users WHERE id=" . $user['id']);
 $me = $res->fetch_assoc();
+
+// Determine current avatar URL for display
+$currentAvatar = $me['avatar'];
+if ($currentAvatar && strpos($currentAvatar, 'assets/') === 0) {
+    $displayAvatar = '../' . $currentAvatar;
+} elseif ($currentAvatar) {
+    $displayAvatar = '../assets/uploads/profile_photos/' . $currentAvatar;
+} else {
+    $displayAvatar = '../assets/uploads/profile_photos/avatar-default.png';
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -54,7 +68,35 @@ $me = $res->fetch_assoc();
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
   <link href="../assets/css/styles.css" rel="stylesheet">
 
-
+  <style>
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        margin-top: 10px;
+        margin-bottom: 20px;
+    }
+    .gallery-item {
+        cursor: pointer;
+        border: 2px solid transparent;
+        border-radius: 50%;
+        padding: 2px;
+        transition: all 0.2s;
+    }
+    .gallery-item:hover {
+        transform: scale(1.1);
+    }
+    .gallery-item.selected {
+        border-color: var(--brand);
+        transform: scale(1.1);
+    }
+    .gallery-item img {
+        width: 100%;
+        height: auto;
+        border-radius: 50%;
+        display: block;
+    }
+  </style>
 </head>
 
 <body>
@@ -73,12 +115,35 @@ $me = $res->fetch_assoc();
     <?php endif; ?>
 
     <form method="post" enctype="multipart/form-data">
+      <input type="hidden" name="selected_photo" id="selectedPhoto">
 
       <div class="avatar-box">
-        <img src="<?php echo $me['avatar']
-          ? '../assets/uploads/profile_photos/' . $me['avatar']
-          : '../assets/uploads/profile_photos/avatar-default.png'; ?>">
-        <input type="file" name="avatar" class="file-input" accept="image/*">
+        <img id="preview" src="<?php echo $displayAvatar; ?>" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:1px solid #ddd;">
+        <br>
+        <label for="photoInput" class="btn secondary" style="display:inline-block; width:auto; padding:5px 10px; font-size:12px; margin-top:10px;">Alterar Foto</label>
+        <input type="file" name="avatar" id="photoInput" class="file-input" accept="image/*" style="display:none;" onchange="handleFileUpload(this)">
+      </div>
+
+      <!-- Opções de Foto (Galeria) -->
+      <div style="margin-bottom:20px; text-align:center;">
+          <span style="font-size:13px; color:var(--muted); display:block; margin-bottom:5px;">Ou escolha um avatar:</span>
+          <div class="gallery-grid">
+              <div class="gallery-item" onclick="selectGalleryPhoto('assets/images/funcionario1.png', this)">
+                  <img src="../assets/images/funcionario1.png">
+              </div>
+              <div class="gallery-item" onclick="selectGalleryPhoto('assets/images/funcionario2.png', this)">
+                  <img src="../assets/images/funcionario2.png">
+              </div>
+              <div class="gallery-item" onclick="selectGalleryPhoto('assets/images/funcionario3.png', this)">
+                  <img src="../assets/images/funcionario3.png">
+              </div>
+              <div class="gallery-item" onclick="selectGalleryPhoto('assets/images/funcionario4.png', this)">
+                  <img src="../assets/images/funcionario4.png">
+              </div>
+              <div class="gallery-item" onclick="selectGalleryPhoto('assets/images/funcionario5.png', this)">
+                  <img src="../assets/images/funcionario5.png">
+              </div>
+          </div>
       </div>
 
       <input class="input" name="name" value="<?php echo htmlspecialchars($me['name']); ?>" placeholder="Nome completo">
@@ -104,6 +169,34 @@ $me = $res->fetch_assoc();
 
   <!-- NAV INFERIOR -->
   <?php include '_partials/bottom_nav.php'; ?>
+
+  <script>
+    const preview = document.getElementById("preview");
+    const selectedPhotoInput = document.getElementById("selectedPhoto");
+    const photoInput = document.getElementById("photoInput");
+
+    function selectGalleryPhoto(path, element) {
+        // Atualiza preview
+        preview.src = "../" + path;
+        // Define valor no input hidden
+        selectedPhotoInput.value = path;
+        // Limpa input file
+        photoInput.value = "";
+        
+        // Visual selection
+        document.querySelectorAll('.gallery-item').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+    }
+
+    function handleFileUpload(input) {
+        if (input.files && input.files[0]) {
+            preview.src = window.URL.createObjectURL(input.files[0]);
+            // Limpa seleção da galeria
+            selectedPhotoInput.value = "";
+            document.querySelectorAll('.gallery-item').forEach(el => el.classList.remove('selected'));
+        }
+    }
+  </script>
 
 </body>
 
