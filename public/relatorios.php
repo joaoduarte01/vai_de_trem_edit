@@ -10,6 +10,20 @@ require_once('../assets/config/db.php');
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Relatórios - Vai de Trem</title>
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+  <link href="../assets/css/styles.css" rel="stylesheet">
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <div class="top-header">
+    <h1><img src="../assets/images/grafico_icone.png" alt="Relatórios" class="icon-img" style="width:22px;height:22px;">
+      Relatórios</h1>
+  </div>
+
+  <div class="container" style="padding-bottom: 80px;">
+    <!-- KPI GRID -->
+    <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-label">Viagens/Mês</div>
         <div class="kpi-value">185</div>
