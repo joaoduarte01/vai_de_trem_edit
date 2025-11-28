@@ -423,8 +423,10 @@ if (isset($_GET['delete'])) {
             photoInput.value = "";
             document.querySelectorAll('.gallery-item').forEach(el => el.classList.remove('selected'));
             
-            // Mostrar campos de login
+            // Mostrar campos de login e tornar obrigatórios
             loginFields.style.display = "block";
+            document.getElementById("empEmail").required = true;
+            document.getElementById("empPassword").required = true;
             
             deleteBtnContainer.style.display = "none";
             modalBg.style.display = "flex";
@@ -462,8 +464,10 @@ if (isset($_GET['delete'])) {
                 preview.src = "../assets/uploads/profile_photos/avatar-default.png";
             }
 
-            // Esconder campos de login
+            // Esconder campos de login e remover obrigatoriedade
             loginFields.style.display = "none";
+            document.getElementById("empEmail").required = false;
+            document.getElementById("empPassword").required = false;
 
             // Configurar botão de excluir
             deleteLink.href = "?delete=" + data.id;
